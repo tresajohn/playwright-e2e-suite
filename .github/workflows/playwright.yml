@@ -1,0 +1,262 @@
+name: Playwright Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+env:
+  BASE_URL: ${{ vars.BASE_URL || 'https://opensource-demo.orangehrmlive.com' }}
+  ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME || 'Admin' }}
+  ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD || 'admin123' }}
+  JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+  JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+  JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+  JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+
+jobs:
+  smoke-tests:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run smoke tests
+        run: npx playwright test --grep @smoke --project=chromium
+
+      - name: Generate Smoke HTML report
+        if: always()
+        run: npx allure generate allure-results --clean -o allure-report-smoke
+
+      - name: Upload smoke HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-report-smoke
+          path: allure-report-smoke/
+          retention-days: 14
+
+      - name: Upload smoke raw results (for merge)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-results-smoke
+          path: allure-results/
+          retention-days: 1
+
+  regression-tests:
+    name: Regression Tests
+    runs-on: ubuntu-latest
+    needs: smoke-tests
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run full regression suite
+        run: npx playwright test --project=chromium
+
+      - name: Generate Regression HTML report
+        if: always()
+        run: npx allure generate allure-results --clean -o allure-report-regression
+
+      - name: Upload regression HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-report-regression
+          path: allure-report-regression/
+          retention-days: 14
+
+      - name: Upload regression raw results (for merge)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-results-regression
+          path: allure-results/
+          retention-days: 1
+
+      - name: Upload test results JSON
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 7
+
+  bdd-tests:
+    name: BDD Tests
+    runs-on: ubuntu-latest
+    needs: smoke-tests
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Generate BDD test files
+        run: npx bddgen
+
+      - name: Run BDD tests
+        run: npx playwright test --project=bdd-chromium
+
+      - name: Generate BDD HTML report
+        if: always()
+        run: npx allure generate allure-results --clean -o allure-report-bdd
+
+      - name: Upload BDD HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-report-bdd
+          path: allure-report-bdd/
+          retention-days: 14
+
+      - name: Upload BDD raw results (for merge)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-results-bdd
+          path: allure-results/
+          retention-days: 1
+
+  api-tests:
+    name: API Tests
+    runs-on: ubuntu-latest
+    needs: smoke-tests
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run API tests
+        run: npx playwright test --project=api
+
+      - name: Generate API HTML report
+        if: always()
+        run: npx allure generate allure-results --clean -o allure-report-api
+
+      - name: Upload API HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-report-api
+          path: allure-report-api/
+          retention-days: 14
+
+      - name: Upload API raw results (for merge)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-results-api
+          path: allure-results/
+          retention-days: 1
+
+  publish-report:
+    name: Publish Combined Allure Report
+    runs-on: ubuntu-latest
+    needs: [smoke-tests, regression-tests, bdd-tests, api-tests]
+    if: always() && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download smoke results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results-smoke
+          path: allure-results/
+        continue-on-error: true
+
+      - name: Download regression results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results-regression
+          path: allure-results/
+        continue-on-error: true
+
+      - name: Download BDD results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results-bdd
+          path: allure-results/
+        continue-on-error: true
+
+      - name: Download API results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results-api
+          path: allure-results/
+        continue-on-error: true
+
+      - name: Generate combined Allure report
+        run: npx allure generate allure-results --clean -o allure-report
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload report to Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: allure-report/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

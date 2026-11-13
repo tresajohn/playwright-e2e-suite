@@ -1,0 +1,25 @@
+{
+  "name": "playwright-e2e-suite",
+  "version": "1.0.0",
+  "description": "Playwright E2E test suite — POM, BDD (Gherkin), CI/CD (GitHub Actions), Jira integration",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:ui": "npx playwright test --ui",
+    "test:debug": "npx playwright test --debug",
+    "test:smoke": "npx playwright test --grep @smoke",
+    "test:regression": "npx playwright test --grep @regression",
+    "report": "npx playwright show-report",
+    "allure:generate": "allure generate allure-results --clean -o allure-report",
+    "allure:open": "allure open allure-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.49.1",
+    "@types/node": "^20.0.0",
+    "allure-commandline": "^2.46.1",
+    "allure-playwright": "^2.15.1",
+    "dotenv": "^16.4.5",
+    "playwright-bdd": "^8.5.1",
+    "typescript": "^5.3.3"
+  }
+}

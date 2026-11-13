@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@pages/*": ["tests/pages/*"],
+      "@fixtures/*": ["tests/fixtures/*"],
+      "@utils/*": ["tests/utils/*"]
+    }
+  },
+  "include": ["tests/**/*.ts", "playwright.config.ts"]
+}
