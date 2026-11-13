@@ -40,7 +40,8 @@ playwright-e2e-suite/
 │   │   ├── api/                 # API tests (OrangeHRM REST API v2)
 │   │   │   ├── auth.api.spec.ts
 │   │   │   ├── employees.api.spec.ts
-│   │   │   └── leave.api.spec.ts
+│   │   │   ├── leave.api.spec.ts
+│   │   │   └── vacancies.api.spec.ts
 │   │   ├── auth/login.spec.ts
 │   │   ├── dashboard/dashboard.spec.ts
 │   │   ├── pim/employee.spec.ts
@@ -80,13 +81,14 @@ playwright-e2e-suite/
 | Leave | 7 | `@smoke`, `@regression` |
 | Recruitment | 8 | `@smoke`, `@regression` |
 
-### API Tests — 15 tests across 3 spec files
+### API Tests — 24 tests across 4 spec files
 
 | Endpoint group | Tests | Tags |
 |----------------|-------|------|
-| Auth (`/api/v2/core/users/me`) | 4 | `@smoke`, `@api` |
+| Auth session (`/api/v2/pim/employees`) | 4 | `@smoke`, `@regression`, `@api` |
 | Employees (`/api/v2/pim/employees`) | 7 | `@smoke`, `@regression`, `@api` |
-| Leave types (`/api/v2/leave/leave-types`) | 4 | `@regression`, `@api` |
+| Leave types (`/api/v2/leave/leave-types`) | 4 | `@smoke`, `@regression`, `@api` |
+| Vacancies (`/api/v2/recruitment/vacancies`) | 6 | `@smoke`, `@regression`, `@api` |
 
 ### BDD Tests — 25 scenarios across 4 feature files
 
