@@ -36,7 +36,7 @@ export class OrangeHRMApiClient {
 
   private async safeJson(response: APIResponse): Promise<any> {
     try {
-      return await this.safeJson(response);
+      return await response.json();
     } catch {
       return {};
     }
