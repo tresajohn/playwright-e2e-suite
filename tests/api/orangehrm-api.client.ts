@@ -34,6 +34,14 @@ export interface ApiSingleResponse<T> {
 export class OrangeHRMApiClient {
   constructor(private readonly request: APIRequestContext) {}
 
+  private async safeJson(response: APIResponse): Promise<any> {
+    try {
+      return await this.safeJson(response);
+    } catch {
+      return {};
+    }
+  }
+
   async getEmployees(params: { limit?: number; offset?: number } = {}): Promise<{
     response: APIResponse;
     body: ApiListResponse<Employee>;
@@ -42,7 +50,7 @@ export class OrangeHRMApiClient {
     const response = await this.request.get(
       `/web/index.php/api/v2/pim/employees?limit=${limit}&offset=${offset}`
     );
-    return { response, body: await response.json() };
+    return { response, body: await this.safeJson(response) };
   }
 
   async getEmployee(empNumber: number): Promise<{
@@ -52,7 +60,7 @@ export class OrangeHRMApiClient {
     const response = await this.request.get(
       `/web/index.php/api/v2/pim/employees/${empNumber}`
     );
-    return { response, body: response.ok() ? await response.json() : { data: null } };
+    return { response, body: response.ok() ? await this.safeJson(response) : { data: null } as any };
   }
 
   async getLeaveTypes(): Promise<{
@@ -62,7 +70,7 @@ export class OrangeHRMApiClient {
     const response = await this.request.get(
       '/web/index.php/api/v2/leave/leave-types'
     );
-    return { response, body: await response.json() };
+    return { response, body: await this.safeJson(response) };
   }
 
   async getVacancies(): Promise<{
@@ -72,7 +80,7 @@ export class OrangeHRMApiClient {
     const response = await this.request.get(
       '/web/index.php/api/v2/recruitment/vacancies'
     );
-    return { response, body: await response.json() };
+    return { response, body: await this.safeJson(response) };
   }
 
   async getCurrentUser(): Promise<{
@@ -82,6 +90,6 @@ export class OrangeHRMApiClient {
     const response = await this.request.get(
       '/web/index.php/api/v2/core/users/me'
     );
-    return { response, body: await response.json() };
+    return { response, body: await this.safeJson(response) };
   }
 }
