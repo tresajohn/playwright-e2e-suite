@@ -19,9 +19,7 @@ export const test = base.extend<OrangeHRMFixtures>({
     await use(new DashboardPage(page));
   },
   employeeListPage: async ({ page }, use) => {
-    const emp = new EmployeeListPage(page);
-    await emp.goto();
-    await use(emp);
+    await use(new EmployeeListPage(page));
   },
   addEmployeePage: async ({ page }, use) => {
     await use(new AddEmployeePage(page));
