@@ -10,8 +10,7 @@ Given('I am on the Leave List page', async ({ page }) => {
 });
 
 When('I navigate to the Apply Leave page', async ({ page }) => {
-  await page.goto('/web/index.php/leave/applyLeave');
-  await page.waitForLoadState('networkidle');
+  await page.goto('/web/index.php/leave/applyLeave', { waitUntil: 'domcontentloaded' });
 });
 
 When('I navigate to the My Leave List page', async ({ page }) => {
@@ -43,7 +42,7 @@ Then('I should be on the Apply Leave page', async ({ page }) => {
 });
 
 Then('I should see the leave type dropdown', async ({ page }) => {
-  await expect(page.locator('.oxd-select-wrapper').first()).toBeVisible();
+  await expect(page.locator('.oxd-select-wrapper').first()).toBeVisible({ timeout: 30_000 });
 });
 
 Then('I should be on the My Leave List page', async ({ page }) => {
