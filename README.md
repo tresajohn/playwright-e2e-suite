@@ -1,5 +1,7 @@
 # Playwright E2E Suite
 
+[![Playwright Tests](https://github.com/tresajohn/playwright-e2e-suite/actions/workflows/playwright.yml/badge.svg)](https://github.com/tresajohn/playwright-e2e-suite/actions/workflows/playwright.yml)
+
 Playwright test automation framework demonstrating Page Object Model (POM), BDD with Gherkin, API testing, CI/CD via GitHub Actions, and automated Jira ticket creation on test failure.
 
 **Target application:** [OrangeHRM Demo](https://opensource-demo.orangehrmlive.com) — an open-source HR management system
