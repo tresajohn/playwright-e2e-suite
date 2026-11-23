@@ -73,11 +73,13 @@ test.describe('Recruitment', () => {
     await page.getByRole('option').first().click();
 
     await page.getByRole('button', { name: 'Save' }).click();
-    await expect(page).toHaveURL(/viewJobVacancy|addJobVacancy/, { timeout: 15_000 });
+    // Assert redirect to list — staying on addJobVacancy means the form failed validation
+    await expect(page).toHaveURL(/viewJobVacancy/, { timeout: 15_000 });
 
-    // Locate the created vacancy by its unique name for teardown
+    // Locate the created vacancy by its unique name for teardown.
+    // Use a large limit so a busy demo server doesn't paginate it out.
     const client = new OrangeHRMApiClient(apiContext);
-    const { body } = await client.getVacancies();
+    const { body } = await client.getVacancies({ limit: 100 });
     const created = body.data.find((v) => v.name === vacancy.vacancyName);
     expect(
       created,

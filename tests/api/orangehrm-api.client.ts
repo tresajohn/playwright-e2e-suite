@@ -74,11 +74,15 @@ export class OrangeHRMApiClient {
     return { response, body: (await this.safeJson(response)) as ApiListResponse<LeaveType> };
   }
 
-  async getVacancies(): Promise<{
+  async getVacancies(params: { limit?: number; offset?: number } = {}): Promise<{
     response: APIResponse;
     body: ApiListResponse<Vacancy>;
   }> {
-    const response = await this.request.get('/web/index.php/api/v2/recruitment/vacancies');
+    const query = new URLSearchParams();
+    if (params.limit !== undefined) query.set('limit', String(params.limit));
+    if (params.offset !== undefined) query.set('offset', String(params.offset));
+    const qs = query.toString() ? `?${query.toString()}` : '';
+    const response = await this.request.get(`/web/index.php/api/v2/recruitment/vacancies${qs}`);
     return { response, body: (await this.safeJson(response)) as ApiListResponse<Vacancy> };
   }
 
