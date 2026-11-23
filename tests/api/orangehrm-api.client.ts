@@ -82,6 +82,18 @@ export class OrangeHRMApiClient {
     return { response, body: (await this.safeJson(response)) as ApiListResponse<Vacancy> };
   }
 
+  async deleteEmployees(ids: number[]): Promise<APIResponse> {
+    return this.request.delete('/web/index.php/api/v2/pim/employees', {
+      data: { ids },
+    });
+  }
+
+  async deleteVacancies(ids: number[]): Promise<APIResponse> {
+    return this.request.delete('/web/index.php/api/v2/recruitment/vacancies', {
+      data: { ids },
+    });
+  }
+
   async getCurrentUser(): Promise<{
     response: APIResponse;
     body: { data: { userName: string; userRole: { name: string } } };

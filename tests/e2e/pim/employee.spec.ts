@@ -1,21 +1,39 @@
 import { test, expect } from '../../fixtures/auth.fixture';
-import { NEW_EMPLOYEE } from '../../utils/test-data';
+import { createEmployeeData } from '../../utils/test-data.factory';
+import { OrangeHRMApiClient } from '../../api/orangehrm-api.client';
 
 test.describe('Employee Management (PIM)', () => {
+  let empNumber: number | undefined;
+
+  test.afterEach(async ({ apiContext }) => {
+    if (empNumber !== undefined) {
+      const client = new OrangeHRMApiClient(apiContext);
+      await client.deleteEmployees([empNumber]);
+      empNumber = undefined;
+    }
+  });
+
   test('should display employee list @smoke', async ({ employeeListPage: _ep, page }) => {
     await expect(page).toHaveURL(/viewEmployeeList/);
     await expect(page.getByRole('heading', { name: 'Employee Information' })).toBeVisible();
   });
 
   test('should add a new employee @regression', async ({ addEmployeePage, page }) => {
+    const employee = createEmployeeData();
+
     await addEmployeePage.fillEmployeeDetails(
-      NEW_EMPLOYEE.firstName,
-      NEW_EMPLOYEE.middleName,
-      NEW_EMPLOYEE.lastName
+      employee.firstName,
+      employee.middleName,
+      employee.lastName
     );
     await addEmployeePage.saveEmployee();
     await expect(page).toHaveURL(/pim\/(view|add)/);
     await expect(page.locator('.oxd-layout-context')).toBeVisible();
+
+    const urlMatch = page.url().match(/empNumber\/(\d+)/);
+    if (urlMatch) {
+      empNumber = parseInt(urlMatch[1], 10);
+    }
   });
 
   test('should search employee by name @regression', async ({ employeeListPage }) => {
