@@ -34,7 +34,7 @@ export interface ApiSingleResponse<T> {
 export class OrangeHRMApiClient {
   constructor(private readonly request: APIRequestContext) {}
 
-  private async safeJson(response: APIResponse): Promise<any> {
+  private async safeJson(response: APIResponse): Promise<unknown> {
     try {
       return await response.json();
     } catch {
@@ -50,46 +50,48 @@ export class OrangeHRMApiClient {
     const response = await this.request.get(
       `/web/index.php/api/v2/pim/employees?limit=${limit}&offset=${offset}`
     );
-    return { response, body: await this.safeJson(response) };
+    return { response, body: (await this.safeJson(response)) as ApiListResponse<Employee> };
   }
 
   async getEmployee(empNumber: number): Promise<{
     response: APIResponse;
     body: ApiSingleResponse<Employee>;
   }> {
-    const response = await this.request.get(
-      `/web/index.php/api/v2/pim/employees/${empNumber}`
-    );
-    return { response, body: response.ok() ? await this.safeJson(response) : { data: null } as any };
+    const response = await this.request.get(`/web/index.php/api/v2/pim/employees/${empNumber}`);
+    return {
+      response,
+      body: response.ok()
+        ? ((await this.safeJson(response)) as ApiSingleResponse<Employee>)
+        : { data: null as unknown as Employee },
+    };
   }
 
   async getLeaveTypes(): Promise<{
     response: APIResponse;
     body: ApiListResponse<LeaveType>;
   }> {
-    const response = await this.request.get(
-      '/web/index.php/api/v2/leave/leave-types'
-    );
-    return { response, body: await this.safeJson(response) };
+    const response = await this.request.get('/web/index.php/api/v2/leave/leave-types');
+    return { response, body: (await this.safeJson(response)) as ApiListResponse<LeaveType> };
   }
 
   async getVacancies(): Promise<{
     response: APIResponse;
     body: ApiListResponse<Vacancy>;
   }> {
-    const response = await this.request.get(
-      '/web/index.php/api/v2/recruitment/vacancies'
-    );
-    return { response, body: await this.safeJson(response) };
+    const response = await this.request.get('/web/index.php/api/v2/recruitment/vacancies');
+    return { response, body: (await this.safeJson(response)) as ApiListResponse<Vacancy> };
   }
 
   async getCurrentUser(): Promise<{
     response: APIResponse;
     body: { data: { userName: string; userRole: { name: string } } };
   }> {
-    const response = await this.request.get(
-      '/web/index.php/api/v2/core/users/me'
-    );
-    return { response, body: await this.safeJson(response) };
+    const response = await this.request.get('/web/index.php/api/v2/core/users/me');
+    return {
+      response,
+      body: (await this.safeJson(response)) as {
+        data: { userName: string; userRole: { name: string } };
+      },
+    };
   }
 }

@@ -1,10 +1,11 @@
 import { test, expect } from '../../fixtures/auth.fixture';
 
 test.describe('Leave Management', () => {
-
   test.beforeEach(async ({ page }) => {
     await page.goto('/web/index.php/leave/viewLeaveList', { waitUntil: 'domcontentloaded' });
-    await page.getByRole('heading', { name: 'Leave List' }).waitFor({ state: 'visible', timeout: 30_000 });
+    await page
+      .getByRole('heading', { name: 'Leave List' })
+      .waitFor({ state: 'visible', timeout: 30_000 });
   });
 
   test('should display leave list page @smoke', async ({ page }) => {
@@ -32,7 +33,9 @@ test.describe('Leave Management', () => {
   });
 
   test('should navigate to Leave Entitlements @regression', async ({ page }) => {
-    await page.goto('/web/index.php/leave/viewLeaveEntitlements', { waitUntil: 'domcontentloaded' });
+    await page.goto('/web/index.php/leave/viewLeaveEntitlements', {
+      waitUntil: 'domcontentloaded',
+    });
     await expect(page).toHaveURL(/viewLeaveEntitlements/);
     await expect(page.locator('.oxd-layout-context')).toBeVisible();
   });

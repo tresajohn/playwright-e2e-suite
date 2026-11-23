@@ -2,8 +2,7 @@ import { test, expect } from '../../fixtures/auth.fixture';
 import { NEW_EMPLOYEE } from '../../utils/test-data';
 
 test.describe('Employee Management (PIM)', () => {
-
-  test('should display employee list @smoke', async ({ employeeListPage, page }) => {
+  test('should display employee list @smoke', async ({ employeeListPage: _ep, page }) => {
     await expect(page).toHaveURL(/viewEmployeeList/);
     await expect(page.getByRole('heading', { name: 'Employee Information' })).toBeVisible();
   });
@@ -25,7 +24,9 @@ test.describe('Employee Management (PIM)', () => {
     expect(count).toBeGreaterThanOrEqual(0);
   });
 
-  test('should show no records for non-existent employee @regression', async ({ employeeListPage }) => {
+  test('should show no records for non-existent employee @regression', async ({
+    employeeListPage,
+  }) => {
     await employeeListPage.searchByName('ZZZNonExistentEmployee999');
     await expect(employeeListPage.noRecordsFound).toBeVisible();
   });
@@ -42,7 +43,10 @@ test.describe('Employee Management (PIM)', () => {
     await expect(page.getByRole('heading', { name: 'Add Employee' })).toBeVisible();
   });
 
-  test('should validate required fields on add employee form @regression', async ({ addEmployeePage, page }) => {
+  test('should validate required fields on add employee form @regression', async ({
+    addEmployeePage,
+    page,
+  }) => {
     await addEmployeePage.firstNameInput.clear();
     await addEmployeePage.lastNameInput.clear();
     await addEmployeePage.saveButton.click();
@@ -50,7 +54,10 @@ test.describe('Employee Management (PIM)', () => {
     await expect(errors.first()).toBeVisible();
   });
 
-  test('should display employee ID field on add employee form @regression', async ({ addEmployeePage, page }) => {
+  test('should display employee ID field on add employee form @regression', async ({
+    addEmployeePage: _aep,
+    page,
+  }) => {
     const empIdLabel = page.getByText('Employee Id');
     await expect(empIdLabel).toBeVisible();
     const inputs = page.locator('.oxd-input:not([type="hidden"])');

@@ -1,0 +1,8 @@
+.features-gen/
+node_modules/
+allure-results/
+allure-report/
+allure-report-*/
+playwright-report/
+test-results/
+package-lock.json

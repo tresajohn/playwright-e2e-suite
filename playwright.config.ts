@@ -11,10 +11,16 @@ const bddTestDir = defineBddConfig({
 
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: false,
+
+  // Each test runs in its own isolated browser context, so full parallelism is safe.
+  // Tests against the shared OrangeHRM demo app intentionally use workers:1 in CI
+  // to avoid data conflicts (e.g. two parallel tests creating the same employee ID).
+  fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 1,
-  workers: process.env.CI ? 1 : 2,
+  retries: process.env.CI ? 2 : 0, // local retries hide flakiness — fix root causes instead
+  workers: process.env.CI ? 1 : undefined, // CI: serialize against shared demo app; local: auto-detect
+
+  globalTimeout: 10 * 60 * 1_000, // prevent hung CI runs
   timeout: 60_000,
   expect: { timeout: 10_000 },
   reporter: [
@@ -71,7 +77,7 @@ export default defineConfig({
       use: {
         baseURL: process.env.BASE_URL || 'https://opensource-demo.orangehrmlive.com',
         storageState: 'playwright/.auth/admin.json',
-        extraHTTPHeaders: { 'Accept': 'application/json' },
+        extraHTTPHeaders: { Accept: 'application/json' },
       },
       dependencies: ['setup'],
     },

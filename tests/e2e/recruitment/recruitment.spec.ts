@@ -1,11 +1,11 @@
 import { test, expect } from '../../fixtures/auth.fixture';
-import { VACANCY_DATA } from '../../utils/test-data';
 
 test.describe('Recruitment', () => {
-
   test.beforeEach(async ({ page }) => {
     await page.goto('/web/index.php/recruitment/viewJobVacancy', { waitUntil: 'domcontentloaded' });
-    await page.getByRole('heading', { name: 'Vacancies' }).waitFor({ state: 'visible', timeout: 30_000 });
+    await page
+      .getByRole('heading', { name: 'Vacancies' })
+      .waitFor({ state: 'visible', timeout: 30_000 });
   });
 
   test('should display job vacancies page @smoke', async ({ page }) => {

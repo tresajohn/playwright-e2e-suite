@@ -32,21 +32,28 @@ class JiraReporter implements Reporter {
     console.log(`\n🎫 Creating ${this.failures.length} Jira ticket(s) for failed tests...`);
 
     for (const { test, result } of this.failures) {
-      await this.createTicket(test, result, { JIRA_BASE_URL, JIRA_API_TOKEN, JIRA_EMAIL, JIRA_PROJECT_KEY });
+      await this.createTicket(test, result, {
+        JIRA_BASE_URL,
+        JIRA_API_TOKEN,
+        JIRA_EMAIL,
+        JIRA_PROJECT_KEY,
+      });
     }
   }
 
   private buildDescription(test: TestCase, result: TestResult): AdfNode {
-    const errorMessage = result.errors[0]?.message?.replace(/\[[0-9;]*m/g, '') || 'Unknown error';
+    const errorMessage =
+      result.errors[0]?.message?.replace(/\x1b\[[0-9;]*m/g, '') || 'Unknown error';
     const filePath = test.location.file.split('/').slice(-3).join('/');
     const isSmoke = test.tags.includes('@smoke');
     const isBdd = test.tags.includes('@bdd');
     const isApi = test.tags.includes('@api');
     const testType = isBdd ? 'BDD (Gherkin)' : isApi ? 'API' : 'UI (Playwright POM)';
     const severity = isSmoke ? 'High' : 'Medium';
-    const ciRunUrl = process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY && process.env.GITHUB_RUN_ID
-      ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
-      : 'Local run';
+    const ciRunUrl =
+      process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY && process.env.GITHUB_RUN_ID
+        ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+        : 'Local run';
     const commitSha = process.env.GITHUB_SHA ? process.env.GITHUB_SHA.substring(0, 7) : 'unknown';
 
     const heading = (text: string): AdfNode => ({
@@ -105,16 +112,21 @@ class JiraReporter implements Reporter {
 
         rule(),
         heading('Impact'),
-        para(text(
-          isSmoke
-            ? '🔴 Smoke test failure — this blocks the CI pipeline and may prevent deployment.'
-            : '🟡 Regression test failure — functionality may be degraded for end users.'
-        )),
+        para(
+          text(
+            isSmoke
+              ? '🔴 Smoke test failure — this blocks the CI pipeline and may prevent deployment.'
+              : '🟡 Regression test failure — functionality may be degraded for end users.'
+          )
+        ),
 
         rule(),
         heading('Automation Reference'),
         para(bold('File: '), text(filePath)),
-        para(bold('Reproduce locally: '), text(`npx playwright test --grep "${test.title}" --headed`)),
+        para(
+          bold('Reproduce locally: '),
+          text(`npx playwright test --grep "${test.title}" --headed`)
+        ),
         para(bold('View trace: '), text('npx playwright show-trace test-results/**/trace.zip')),
 
         rule(),
@@ -123,7 +135,10 @@ class JiraReporter implements Reporter {
           type: 'bulletList',
           content: [
             { type: 'listItem', content: [para(text('[ ] Reproduce manually'))] },
-            { type: 'listItem', content: [para(text('[ ] Check if environment-specific or consistent'))] },
+            {
+              type: 'listItem',
+              content: [para(text('[ ] Check if environment-specific or consistent'))],
+            },
             { type: 'listItem', content: [para(text('[ ] Assign to developer'))] },
             { type: 'listItem', content: [para(text('[ ] Retest after fix and close ticket'))] },
           ],
@@ -135,7 +150,12 @@ class JiraReporter implements Reporter {
   private async createTicket(
     test: TestCase,
     result: TestResult,
-    env: { JIRA_BASE_URL: string; JIRA_API_TOKEN: string; JIRA_EMAIL: string; JIRA_PROJECT_KEY: string }
+    env: {
+      JIRA_BASE_URL: string;
+      JIRA_API_TOKEN: string;
+      JIRA_EMAIL: string;
+      JIRA_PROJECT_KEY: string;
+    }
   ): Promise<void> {
     const isSmoke = test.tags.includes('@smoke');
     const isBdd = test.tags.includes('@bdd');
@@ -166,23 +186,27 @@ class JiraReporter implements Reporter {
       const response = await fetch(`${env.JIRA_BASE_URL}/rest/api/3/issue`, {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${auth}`,
+          Authorization: `Basic ${auth}`,
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify(payload),
       });
 
       if (response.ok) {
-        const data = await response.json() as { key: string };
-        console.log(`  ✅ ${data.key} — "${test.title}" [${isSmoke ? 'High' : 'Medium'}, ${testType}]`);
-        const screenshot = result.attachments.find(a => a.name === 'screenshot' && a.path);
+        const data = (await response.json()) as { key: string };
+        console.log(
+          `  ✅ ${data.key} — "${test.title}" [${isSmoke ? 'High' : 'Medium'}, ${testType}]`
+        );
+        const screenshot = result.attachments.find((a) => a.name === 'screenshot' && a.path);
         if (screenshot?.path) {
           await this.attachScreenshot(data.key, screenshot.path, env);
         }
       } else {
         const text = await response.text();
-        console.error(`  ❌ Failed to create ticket for "${test.title}": ${response.status} ${text}`);
+        console.error(
+          `  ❌ Failed to create ticket for "${test.title}": ${response.status} ${text}`
+        );
       }
     } catch (err) {
       console.error(`  ❌ Jira API error for "${test.title}": ${err}`);
@@ -204,20 +228,25 @@ class JiraReporter implements Reporter {
       form.append('file', new Blob([fileBuffer], { type: 'image/png' }), fileName);
 
       const auth = Buffer.from(`${env.JIRA_EMAIL}:${env.JIRA_API_TOKEN}`).toString('base64');
-      const attachResponse = await fetch(`${env.JIRA_BASE_URL}/rest/api/3/issue/${issueKey}/attachments`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${auth}`,
-          'X-Atlassian-Token': 'no-check',
-        },
-        body: form,
-      });
+      const attachResponse = await fetch(
+        `${env.JIRA_BASE_URL}/rest/api/3/issue/${issueKey}/attachments`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Basic ${auth}`,
+            'X-Atlassian-Token': 'no-check',
+          },
+          body: form,
+        }
+      );
 
       if (attachResponse.ok) {
         console.log(`    📎 Screenshot attached to ${issueKey}`);
       } else {
         const errorText = await attachResponse.text();
-        console.error(`    ⚠️  Failed to attach screenshot to ${issueKey}: ${attachResponse.status} ${errorText}`);
+        console.error(
+          `    ⚠️  Failed to attach screenshot to ${issueKey}: ${attachResponse.status} ${errorText}`
+        );
       }
     } catch (err) {
       console.error(`    ⚠️  Screenshot attachment error for ${issueKey}: ${err}`);

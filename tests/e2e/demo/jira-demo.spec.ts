@@ -16,18 +16,19 @@
 import { test, expect } from '../../fixtures/auth.fixture';
 
 test.describe('Jira Integration Demo @regression', () => {
-
   test('[DEMO] PIM page heading displays correct title @regression', async ({ page }) => {
-    test.skip(!!process.env.CI, 'Intentional failure demo — skipped in CI to avoid blocking the pipeline');
+    test.skip(
+      !!process.env.CI,
+      'Intentional failure demo — skipped in CI to avoid blocking the pipeline'
+    );
 
     await page.goto('/web/index.php/pim/viewEmployeeList', { waitUntil: 'domcontentloaded' });
 
     // INTENTIONAL FAILURE — The actual heading is "Employee Information".
     // Asserting "Employee Records" to trigger a predictable, meaningful failure
     // and demonstrate the Jira auto-ticket pipeline.
-    await expect(
-      page.getByRole('heading', { name: 'Employee Records' })
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('heading', { name: 'Employee Records' })).toBeVisible({
+      timeout: 10_000,
+    });
   });
-
 });

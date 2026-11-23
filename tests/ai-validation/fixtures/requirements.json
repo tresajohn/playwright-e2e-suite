@@ -1,0 +1,27 @@
+[
+  {
+    "id": "REQ-001",
+    "title": "User Authentication",
+    "description": "Users must be able to log in with valid credentials and be rejected on invalid ones"
+  },
+  {
+    "id": "REQ-002",
+    "title": "Employee Management (PIM)",
+    "description": "Admins must be able to add, search, and delete employee records"
+  },
+  {
+    "id": "REQ-003",
+    "title": "Leave Management",
+    "description": "Employees must be able to apply for leave; admins must be able to approve or reject"
+  },
+  {
+    "id": "REQ-004",
+    "title": "Recruitment Management",
+    "description": "Admins must be able to create vacancies and manage the applicant pipeline"
+  },
+  {
+    "id": "REQ-005",
+    "title": "Dashboard Overview",
+    "description": "Authenticated users must see a summary dashboard with key widgets on login"
+  }
+]

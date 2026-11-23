@@ -1,7 +1,6 @@
 import { test, expect } from '../../fixtures/auth.fixture';
 
 test.describe('Dashboard', () => {
-
   test('should load dashboard after login @smoke', async ({ dashboardPage }) => {
     await dashboardPage.expectDashboardLoaded();
   });
@@ -29,9 +28,11 @@ test.describe('Dashboard', () => {
     await expect(page).toHaveURL(/viewLeaveList/);
   });
 
-  test('should navigate to Recruitment from sidebar @regression', async ({ dashboardPage, page }) => {
+  test('should navigate to Recruitment from sidebar @regression', async ({
+    dashboardPage,
+    page,
+  }) => {
     await dashboardPage.clickNavMenuItem('Recruitment');
     await expect(page).toHaveURL(/recruitment/);
   });
-
 });

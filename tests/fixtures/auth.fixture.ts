@@ -4,15 +4,24 @@ import { DashboardPage } from '../pages/dashboard.page';
 import { EmployeeListPage } from '../pages/pim/employee-list.page';
 import { AddEmployeePage } from '../pages/pim/add-employee.page';
 
+// TEST-scoped: each fixture depends on `page`, which is test-scoped.
+// A fresh page — and therefore a fresh POM instance — is created per test.
 type OrangeHRMFixtures = {
   loginPage: LoginPage;
   dashboardPage: DashboardPage;
   employeeListPage: EmployeeListPage;
   addEmployeePage: AddEmployeePage;
+};
+
+// WORKER-scoped: worker fixtures are declared separately and shared across
+// all tests running in the same worker. An authenticated HTTP context carries
+// no mutable browser state, so it is safe to reuse across parallel tests
+// within a worker, avoiding the overhead of a new context per test.
+type OrangeHRMWorkerFixtures = {
   apiContext: APIRequestContext;
 };
 
-export const test = base.extend<OrangeHRMFixtures>({
+export const test = base.extend<OrangeHRMFixtures, OrangeHRMWorkerFixtures>({
   loginPage: async ({ page }, use) => {
     const loginPage = new LoginPage(page);
     await loginPage.goto();
@@ -37,15 +46,18 @@ export const test = base.extend<OrangeHRMFixtures>({
     await use(addEmployeePage);
   },
 
-  apiContext: async ({}, use) => {
-    const ctx = await playwright.newContext({
-      baseURL: process.env.BASE_URL || 'https://opensource-demo.orangehrmlive.com',
-      storageState: 'playwright/.auth/admin.json',
-      extraHTTPHeaders: { 'Accept': 'application/json' },
-    });
-    await use(ctx);
-    await ctx.dispose();
-  },
+  apiContext: [
+    async ({}, use) => {
+      const ctx = await playwright.newContext({
+        baseURL: process.env.BASE_URL || 'https://opensource-demo.orangehrmlive.com',
+        storageState: 'playwright/.auth/admin.json',
+        extraHTTPHeaders: { Accept: 'application/json' },
+      });
+      await use(ctx);
+      await ctx.dispose();
+    },
+    { scope: 'worker' },
+  ],
 });
 
 export { expect } from '@playwright/test';

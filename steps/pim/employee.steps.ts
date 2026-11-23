@@ -21,9 +21,12 @@ When('I click the Reset button', async ({ employeeListPage }) => {
   await employeeListPage.resetButton.click();
 });
 
-When('I fill in first name {string} middle name {string} last name {string}', async ({ addEmployeePage }, first: string, middle: string, last: string) => {
-  await addEmployeePage.fillEmployeeDetails(first, middle, last);
-});
+When(
+  'I fill in first name {string} middle name {string} last name {string}',
+  async ({ addEmployeePage }, first: string, middle: string, last: string) => {
+    await addEmployeePage.fillEmployeeDetails(first, middle, last);
+  }
+);
 
 When('I click Save on the employee form', async ({ addEmployeePage }) => {
   await addEmployeePage.saveButton.click();

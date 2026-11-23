@@ -1,0 +1,208 @@
+[
+  {
+    "scenarioId": "AI-001",
+    "requirementId": "REQ-001",
+    "title": "User with valid credentials can log in successfully",
+    "priority": "critical",
+    "tags": ["@smoke", "@auth"],
+    "preconditions": ["Application is accessible", "Admin account exists"],
+    "steps": [
+      { "action": "navigate", "target": "/web/index.php/auth/login" },
+      { "action": "fill", "target": "Username", "value": "Admin" },
+      { "action": "fill", "target": "Password", "value": "admin123" },
+      { "action": "click", "target": "Login button" },
+      { "action": "verify", "target": "Dashboard heading" }
+    ],
+    "expectedResult": "User is redirected to the dashboard and dashboard heading is visible",
+    "reviewStatus": "approved",
+    "generatedBy": "claude-sonnet-4-6",
+    "generatedAt": "2026-11-20T09:00:00Z",
+    "reviewedBy": "tresa.john",
+    "reviewNotes": "Covers happy path; aligns with existing login.spec.ts smoke test"
+  },
+  {
+    "scenarioId": "AI-002",
+    "requirementId": "REQ-001",
+    "title": "User with invalid credentials sees an error message on the login page",
+    "priority": "high",
+    "tags": ["@smoke", "@auth"],
+    "preconditions": ["Application is accessible"],
+    "steps": [
+      { "action": "navigate", "target": "/web/index.php/auth/login" },
+      { "action": "fill", "target": "Username", "value": "wrong_user" },
+      { "action": "fill", "target": "Password", "value": "wrong_pass" },
+      { "action": "click", "target": "Login button" },
+      { "action": "verify", "target": "Invalid credentials error alert" }
+    ],
+    "expectedResult": "Error alert is visible and user remains on the login page",
+    "reviewStatus": "approved",
+    "generatedBy": "claude-sonnet-4-6",
+    "generatedAt": "2026-11-20T09:00:00Z",
+    "reviewedBy": "tresa.john",
+    "reviewNotes": "Negative path; matches login.spec.ts coverage"
+  },
+  {
+    "scenarioId": "AI-003",
+    "requirementId": "REQ-002",
+    "title": "Admin can add a new employee with required fields only",
+    "priority": "high",
+    "tags": ["@regression", "@pim"],
+    "preconditions": ["Admin is logged in"],
+    "steps": [
+      { "action": "navigate", "target": "/web/index.php/pim/addEmployee" },
+      { "action": "fill", "target": "First Name", "value": "AutoTest" },
+      { "action": "fill", "target": "Last Name", "value": "User" },
+      { "action": "click", "target": "Save button" },
+      { "action": "verify", "target": "Personal Details heading" }
+    ],
+    "expectedResult": "Employee record is created and Personal Details page is shown",
+    "reviewStatus": "approved",
+    "generatedBy": "claude-sonnet-4-6",
+    "generatedAt": "2026-11-20T09:05:00Z",
+    "reviewedBy": "tresa.john",
+    "reviewNotes": "Approved; uses unique names via test data factory in implementation"
+  },
+  {
+    "scenarioId": "AI-004",
+    "requirementId": "REQ-002",
+    "title": "Admin can create a new employee record using the minimum required information",
+    "priority": "high",
+    "tags": ["@regression", "@pim"],
+    "preconditions": ["Admin is logged in"],
+    "steps": [
+      { "action": "navigate", "target": "/web/index.php/pim/addEmployee" },
+      { "action": "fill", "target": "First Name", "value": "AutoTest" },
+      { "action": "fill", "target": "Last Name", "value": "User" },
+      { "action": "click", "target": "Save" },
+      { "action": "verify", "target": "Personal Details section" }
+    ],
+    "expectedResult": "New employee record is saved and the profile page opens",
+    "reviewStatus": "approved",
+    "generatedBy": "claude-sonnet-4-6",
+    "generatedAt": "2026-11-20T09:06:00Z",
+    "reviewedBy": "tresa.john",
+    "reviewNotes": "POTENTIAL DUPLICATE of AI-003 — steps and intent are nearly identical; consider merging"
+  },
+  {
+    "scenarioId": "AI-005",
+    "requirementId": "REQ-002",
+    "title": "Admin can search for an existing employee by name in the PIM list",
+    "priority": "medium",
+    "tags": ["@regression", "@pim"],
+    "preconditions": ["Admin is logged in", "At least one employee record exists"],
+    "steps": [
+      { "action": "navigate", "target": "/web/index.php/pim/viewEmployeeList" },
+      { "action": "fill", "target": "Employee Name search field", "value": "Admin" },
+      { "action": "click", "target": "Search button" },
+      { "action": "verify", "target": "Employee list table results" }
+    ],
+    "expectedResult": "Employee list is filtered and shows matching results",
+    "reviewStatus": "approved",
+    "generatedBy": "claude-sonnet-4-6",
+    "generatedAt": "2026-11-20T09:08:00Z",
+    "reviewedBy": "tresa.john",
+    "reviewNotes": "Good search coverage, not currently in suite"
+  },
+  {
+    "scenarioId": "AI-006",
+    "requirementId": "REQ-003",
+    "title": "Employee can apply for leave by selecting dates and leave type",
+    "priority": "high",
+    "tags": ["@regression", "@leave"],
+    "preconditions": ["Admin is logged in"],
+    "steps": [
+      { "action": "navigate", "target": "/web/index.php/leave/applyLeave" },
+      { "action": "select", "target": "Leave Type dropdown", "value": "CAN - FMLA" },
+      { "action": "fill", "target": "From Date", "value": "2026-12-01" },
+      { "action": "fill", "target": "To Date", "value": "2026-12-02" },
+      { "action": "fill", "target": "Comments", "value": "Test leave request" },
+      { "action": "click", "target": "Apply button" },
+      { "action": "verify", "target": "Successfully submitted message" }
+    ],
+    "expectedResult": "Leave request is submitted and a confirmation message is shown",
+    "reviewStatus": "approved",
+    "generatedBy": "claude-sonnet-4-6",
+    "generatedAt": "2026-11-20T09:10:00Z",
+    "reviewedBy": "tresa.john",
+    "reviewNotes": "Approved; dates should be parameterised in implementation"
+  },
+  {
+    "scenarioId": "AI-007",
+    "requirementId": "REQ-004",
+    "title": "Admin can create a new job vacancy with required details",
+    "priority": "medium",
+    "tags": ["@regression", "@recruitment"],
+    "preconditions": ["Admin is logged in"],
+    "steps": [
+      { "action": "navigate", "target": "/web/index.php/recruitment/addJobVacancy" },
+      { "action": "select", "target": "Job Title dropdown", "value": "Software Engineer" },
+      { "action": "fill", "target": "Vacancy Name", "value": "AI Generated QA Role" },
+      { "action": "click", "target": "Save button" },
+      { "action": "verify", "target": "Edit Job Vacancy heading" }
+    ],
+    "expectedResult": "Vacancy is saved and the edit page opens",
+    "reviewStatus": "approved",
+    "generatedBy": "claude-sonnet-4-6",
+    "generatedAt": "2026-11-20T09:12:00Z",
+    "reviewedBy": "tresa.john",
+    "reviewNotes": "Approved; vacancy name must be unique per run — use test data factory"
+  },
+  {
+    "scenarioId": "AI-008",
+    "requirementId": "REQ-999",
+    "title": "Dashboard widgets all load within an acceptable response time",
+    "priority": "medium",
+    "tags": ["@regression", "@dashboard"],
+    "preconditions": ["Admin is logged in"],
+    "steps": [
+      { "action": "navigate", "target": "/web/index.php/dashboard/index" },
+      { "action": "verify", "target": "Time at Work widget" },
+      { "action": "verify", "target": "My Actions widget" },
+      { "action": "verify", "target": "Quick Launch widget" }
+    ],
+    "expectedResult": "All dashboard widgets are visible without page errors",
+    "reviewStatus": "approved",
+    "generatedBy": "claude-sonnet-4-6",
+    "generatedAt": "2026-11-20T09:15:00Z",
+    "reviewedBy": "tresa.john",
+    "reviewNotes": "TRACEABILITY ERROR: requirementId REQ-999 does not exist — update to REQ-005"
+  },
+  {
+    "scenarioId": "AI-009",
+    "requirementId": "REQ-001",
+    "title": "User with an expired password is prompted to reset it before accessing the app",
+    "priority": "medium",
+    "tags": ["@regression", "@auth"],
+    "preconditions": ["A user account with an expired password exists"],
+    "steps": [
+      { "action": "navigate", "target": "/web/index.php/auth/login" },
+      { "action": "fill", "target": "Username", "value": "expired_user" },
+      { "action": "fill", "target": "Password", "value": "OldPassword1!" },
+      { "action": "click", "target": "Login button" },
+      { "action": "verify", "target": "Password reset prompt" }
+    ],
+    "expectedResult": "User sees a password reset prompt and cannot access the dashboard",
+    "reviewStatus": "pending",
+    "generatedBy": "claude-sonnet-4-6",
+    "generatedAt": "2026-11-20T09:18:00Z"
+  },
+  {
+    "scenarioId": "AI-010",
+    "requirementId": "REQ-003",
+    "title": "Leave list shows all pending leave requests for the current year",
+    "priority": "low",
+    "tags": ["@regression", "@leave"],
+    "preconditions": ["Admin is logged in", "At least one leave request has been submitted"],
+    "steps": [
+      { "action": "navigate", "target": "/web/index.php/leave/viewLeaveList" },
+      { "action": "verify", "target": "Leave list table" },
+      { "action": "verify", "target": "At least one row in the leave table" }
+    ],
+    "expectedResult": "Leave list table is populated with leave requests",
+    "reviewStatus": "approved",
+    "generatedBy": "claude-sonnet-4-6",
+    "generatedAt": "2026-11-20T09:20:00Z",
+    "reviewedBy": "tresa.john",
+    "reviewNotes": "Approved; lightweight smoke check for the leave list page"
+  }
+]

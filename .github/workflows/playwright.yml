@@ -22,9 +22,36 @@ env:
   JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
 
 jobs:
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Security audit
+        run: npm audit --audit-level=high
+
   smoke-tests:
     name: Smoke Tests
     runs-on: ubuntu-latest
+    needs: code-quality
     steps:
       - uses: actions/checkout@v4
 

@@ -4,12 +4,14 @@ import { ADMIN_USER, INVALID_USER } from '../../utils/test-data';
 test.use({ storageState: { cookies: [], origins: [] } });
 
 test.describe('Login', () => {
-
   test('should display login page elements @smoke', async ({ loginPage }) => {
     await loginPage.expectLoginPageVisible();
   });
 
-  test('should login successfully with valid admin credentials @smoke', async ({ loginPage, page }) => {
+  test('should login successfully with valid admin credentials @smoke', async ({
+    loginPage,
+    page,
+  }) => {
     await loginPage.login(ADMIN_USER.username, ADMIN_USER.password);
     await expect(page).toHaveURL(/dashboard/);
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
@@ -20,12 +22,17 @@ test.describe('Login', () => {
     await loginPage.expectInvalidCredentialsError();
   });
 
-  test('should show error for valid username with wrong password @regression', async ({ loginPage }) => {
+  test('should show error for valid username with wrong password @regression', async ({
+    loginPage,
+  }) => {
     await loginPage.login(ADMIN_USER.username, 'WrongPassword123!');
     await loginPage.expectInvalidCredentialsError();
   });
 
-  test('should show required field errors when submitting empty form @regression', async ({ loginPage, page }) => {
+  test('should show required field errors when submitting empty form @regression', async ({
+    loginPage,
+    page,
+  }) => {
     await page.getByRole('button', { name: 'Login' }).click();
     await loginPage.expectRequiredFieldError();
   });
@@ -50,7 +57,10 @@ test.describe('Login', () => {
     await loginPage.expectLoginPageVisible();
   });
 
-  test('should clear fields and re-login after failed attempt @regression', async ({ loginPage, page }) => {
+  test('should clear fields and re-login after failed attempt @regression', async ({
+    loginPage,
+    page,
+  }) => {
     await loginPage.login(INVALID_USER.username, INVALID_USER.password);
     await loginPage.expectInvalidCredentialsError();
 

@@ -31,8 +31,8 @@ test.describe('Leave Types API', () => {
     const { body } = await api.getLeaveTypes();
     if (!body.data) test.skip();
 
-    const deleted = body.data.filter(lt => lt.deleted === true);
-    expect(deleted.length).toBe(0);
+    const deleted = body.data.filter((lt) => lt.deleted === true);
+    expect(deleted).toHaveLength(0);
   });
 
   test('GET /leave/leave-types meta total matches data count @regression @api', async () => {

@@ -24,7 +24,11 @@ export class AddEmployeePage extends BasePage {
     await this.waitForPageLoad();
   }
 
-  async fillEmployeeDetails(firstName: string, middleName: string, lastName: string): Promise<void> {
+  async fillEmployeeDetails(
+    firstName: string,
+    middleName: string,
+    lastName: string
+  ): Promise<void> {
     await this.firstNameInput.fill(firstName);
     await this.middleNameInput.fill(middleName);
     await this.lastNameInput.fill(lastName);

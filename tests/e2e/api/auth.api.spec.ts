@@ -1,8 +1,9 @@
 import { test, expect } from '../../fixtures/auth.fixture';
 
 test.describe('Auth API', () => {
-
-  test('authenticated session can access protected employee endpoint @smoke @api', async ({ apiContext }) => {
+  test('authenticated session can access protected employee endpoint @smoke @api', async ({
+    apiContext,
+  }) => {
     const response = await apiContext.get('/web/index.php/api/v2/pim/employees?limit=1');
     const body = await response.json();
 
@@ -11,7 +12,9 @@ test.describe('Auth API', () => {
     expect(Array.isArray(body.data)).toBe(true);
   });
 
-  test('authenticated session can access recruitment vacancies @regression @api', async ({ apiContext }) => {
+  test('authenticated session can access recruitment vacancies @regression @api', async ({
+    apiContext,
+  }) => {
     const response = await apiContext.get('/web/index.php/api/v2/recruitment/vacancies');
     const body = await response.json();
 

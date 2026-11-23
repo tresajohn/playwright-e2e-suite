@@ -41,7 +41,10 @@ export class EmployeeListPage extends BasePage {
   async getResultCount(): Promise<number> {
     const countLocator = this.page.locator('.oxd-table-header .oxd-text').first();
     await countLocator.waitFor({ state: 'visible', timeout: 10_000 }).catch(() => {});
-    const countText = await this.page.locator('.orangehrm-header-container').innerText().catch(() => '');
+    const countText = await this.page
+      .locator('.orangehrm-header-container')
+      .innerText()
+      .catch(() => '');
     const match = countText.match(/\((\d+)\)/);
     return match ? parseInt(match[1]) : 0;
   }

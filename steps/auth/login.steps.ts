@@ -18,10 +18,13 @@ When('I enter valid admin credentials', async ({ loginPage }) => {
   await loginPage.passwordInput.fill(ADMIN_USER.password);
 });
 
-When('I enter username {string} and password {string}', async ({ loginPage }, username: string, password: string) => {
-  await loginPage.usernameInput.fill(username);
-  await loginPage.passwordInput.fill(password);
-});
+When(
+  'I enter username {string} and password {string}',
+  async ({ loginPage }, username: string, password: string) => {
+    await loginPage.usernameInput.fill(username);
+    await loginPage.passwordInput.fill(password);
+  }
+);
 
 When('I click the login button', async ({ loginPage }) => {
   await loginPage.loginButton.click();
