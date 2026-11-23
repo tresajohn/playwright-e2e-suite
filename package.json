@@ -18,7 +18,7 @@
     "format:check": "prettier --check 'tests/**/*.ts' 'steps/**/*.ts' '*.ts'",
     "typecheck": "tsc --noEmit",
     "validate": "npm run typecheck && npm run lint && npm run format:check",
-    "audit": "npm audit --audit-level=high",
+    "audit": "npm audit --audit-level=critical",
     "ai:validate": "npx tsx tests/ai-validation/index.ts",
     "test:contracts": "npx playwright test --project=contracts"
   },
