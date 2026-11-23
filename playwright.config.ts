@@ -82,5 +82,13 @@ export default defineConfig({
       },
       dependencies: ['setup'],
     },
+    // ── Contract Tests ──
+    {
+      name: 'contracts',
+      testDir: '.',
+      testMatch: 'tests/contracts/**/*.pact.spec.ts',
+      use: { baseURL: process.env.BASE_URL || 'https://opensource-demo.orangehrmlive.com' },
+      // No auth dependency — Pact uses its own mock server
+    },
   ],
 });
