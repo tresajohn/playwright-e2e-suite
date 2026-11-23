@@ -29,6 +29,7 @@ export default defineConfig({
     ['allure-playwright', { outputFolder: 'allure-results', suiteTitle: false }],
     ['./tests/reporters/jira.reporter.ts'],
     process.env.CI ? ['github'] : ['list'],
+    ['./tests/reporters/flaky.reporter.ts'],
   ],
   use: {
     baseURL: process.env.BASE_URL || 'https://opensource-demo.orangehrmlive.com',
