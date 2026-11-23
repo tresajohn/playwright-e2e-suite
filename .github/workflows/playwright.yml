@@ -120,12 +120,19 @@ jobs:
         if: always()
         run: |
           node -e "
-            const r = require('./test-results/flaky-report.json');
+            const fs = require('fs');
+            const reportPath = './test-results/flaky-report.json';
+            if (!fs.existsSync(reportPath)) {
+              console.log('No flaky report found — skipping threshold check');
+              process.exit(0);
+            }
+            const r = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
             if (r.thresholdExceeded) {
               console.error('Flaky rate ' + (r.flakyRate*100).toFixed(1) + '% exceeded threshold ' + (r.threshold*100) + '%');
               process.exit(1);
             }
-          " || true
+            console.log('Flaky rate ' + (r.flakyRate*100).toFixed(1) + '% is within threshold');
+          "
 
   regression-tests:
     name: Regression Tests
