@@ -16,9 +16,10 @@ test.describe('Recruitment', () => {
     if (vacancyId !== undefined) {
       const client = new OrangeHRMApiClient(apiContext);
       const response = await client.deleteVacancies([vacancyId]);
-      if (!response.ok()) {
-        console.warn(`Vacancy teardown: DELETE returned ${response.status()} for id ${vacancyId}`);
-      }
+      expect(
+        response.ok(),
+        `Failed to delete vacancy ${vacancyId}: HTTP ${response.status()}`
+      ).toBeTruthy();
       vacancyId = undefined;
     }
   });
