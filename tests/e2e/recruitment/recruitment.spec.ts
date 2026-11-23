@@ -15,7 +15,10 @@ test.describe('Recruitment', () => {
   test.afterEach(async ({ apiContext }) => {
     if (vacancyId !== undefined) {
       const client = new OrangeHRMApiClient(apiContext);
-      await client.deleteVacancies([vacancyId]);
+      const response = await client.deleteVacancies([vacancyId]);
+      if (!response.ok()) {
+        console.warn(`Vacancy teardown: DELETE returned ${response.status()} for id ${vacancyId}`);
+      }
       vacancyId = undefined;
     }
   });
@@ -75,9 +78,11 @@ test.describe('Recruitment', () => {
     const client = new OrangeHRMApiClient(apiContext);
     const { body } = await client.getVacancies();
     const created = body.data.find((v) => v.name === vacancy.vacancyName);
-    if (created) {
-      vacancyId = created.id;
-    }
+    expect(
+      created,
+      `Vacancy '${vacancy.vacancyName}' not found after save — creation may have failed`
+    ).toBeDefined();
+    vacancyId = created!.id;
   });
 
   test('should search vacancies by job title @regression', async ({ page }) => {
