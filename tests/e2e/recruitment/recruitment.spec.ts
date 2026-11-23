@@ -66,15 +66,25 @@ test.describe('Recruitment', () => {
     const vacancyNameInput = page.locator('.oxd-input').nth(1);
     await vacancyNameInput.fill(vacancy.vacancyName);
 
-    // Hiring Manager autocomplete (required on this form)
-    const hiringManagerInput = page.locator('input[placeholder="Type for hints..."]').first();
-    await hiringManagerInput.fill('Admin');
-    await page.getByRole('option').first().waitFor({ state: 'visible', timeout: 5_000 });
-    await page.getByRole('option').first().click();
+    // Hiring Manager autocomplete — pressSequentially fires Vue's debounce handler per
+    // keystroke. The dropdown briefly shows "Searching..." while results load; filter
+    // that out and wait for a real employee option before clicking.
+    const hiringManagerInput = page.locator('.oxd-autocomplete-wrapper input').first();
+    await hiringManagerInput.click();
+    await hiringManagerInput.pressSequentially('Admin', { delay: 150 });
+    const firstRealOption = page
+      .locator('.oxd-autocomplete-option')
+      .filter({ hasNotText: 'Searching...' })
+      .first();
+    await firstRealOption.waitFor({ state: 'visible', timeout: 10_000 });
+    await firstRealOption.click();
 
     await page.getByRole('button', { name: 'Save' }).click();
-    // Assert redirect to list — staying on addJobVacancy means the form failed validation
-    await expect(page).toHaveURL(/viewJobVacancy/, { timeout: 15_000 });
+    // OrangeHRM converts the form to edit mode in-place after a successful save (the
+    // URL stays on addJobVacancy). A validation failure keeps the title 'Add Vacancy'.
+    await expect(page.getByRole('heading', { name: 'Edit Vacancy' })).toBeVisible({
+      timeout: 15_000,
+    });
 
     // Locate the created vacancy by its unique name for teardown.
     // Use a large limit so a busy demo server doesn't paginate it out.
