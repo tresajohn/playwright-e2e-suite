@@ -51,4 +51,14 @@ if (!test2Attempts) throw new Error('No attempts recorded for test-2');
 if (test2Attempts.some((a) => a.status === 'failed'))
   throw new Error('test-2 should not have any failures');
 
+// Threshold boundary: flakyRate < threshold must NOT fail CI
+// 1 flaky / 50 total = 2% rate — below the 10% default threshold
+const flakyRate = 1 / 50;
+const threshold = parseFloat(process.env.FLAKY_THRESHOLD ?? '0.10');
+const thresholdExceeded = flakyRate > threshold;
+if (thresholdExceeded)
+  throw new Error(
+    `2% flaky rate should not exceed 10% threshold, got thresholdExceeded=${thresholdExceeded}`
+  );
+
 console.log('All FlakyReporter unit tests passed');

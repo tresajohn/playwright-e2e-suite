@@ -78,9 +78,9 @@ class FlakyReporter implements Reporter {
     }
     fs.writeFileSync(path.join(outputDir, 'flaky-report.json'), JSON.stringify(report, null, 2));
 
-    if ((thresholdExceeded || flakyCount > 0) && process.env.CI) {
+    if (thresholdExceeded && process.env.CI) {
       console.error(
-        `\nFlaky tests detected: ${flakyCount}/${totalTests} (${(flakyRate * 100).toFixed(1)}%). Threshold: ${(threshold * 100).toFixed(0)}%`
+        `\nFlaky rate ${(flakyRate * 100).toFixed(1)}% exceeded threshold ${(threshold * 100).toFixed(0)}%. Flaky tests: ${flakyCount}/${totalTests}`
       );
       process.exitCode = 1;
     }
