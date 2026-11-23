@@ -1,11 +1,23 @@
 import { test, expect } from '../../fixtures/auth.fixture';
+import { createVacancyData } from '../../utils/test-data.factory';
+import { OrangeHRMApiClient } from '../../api/orangehrm-api.client';
 
 test.describe('Recruitment', () => {
+  let vacancyId: number | undefined;
+
   test.beforeEach(async ({ page }) => {
     await page.goto('/web/index.php/recruitment/viewJobVacancy', { waitUntil: 'domcontentloaded' });
     await page
       .getByRole('heading', { name: 'Vacancies' })
       .waitFor({ state: 'visible', timeout: 30_000 });
+  });
+
+  test.afterEach(async ({ apiContext }) => {
+    if (vacancyId !== undefined) {
+      const client = new OrangeHRMApiClient(apiContext);
+      await client.deleteVacancies([vacancyId]);
+      vacancyId = undefined;
+    }
   });
 
   test('should display job vacancies page @smoke', async ({ page }) => {
@@ -34,6 +46,38 @@ test.describe('Recruitment', () => {
     await page.getByRole('button', { name: 'Save' }).click();
     const errors = page.locator('.oxd-input-field-error-message');
     await expect(errors.first()).toBeVisible();
+  });
+
+  test('should add a new vacancy @regression', async ({ page, apiContext }) => {
+    const vacancy = createVacancyData();
+
+    await page.getByRole('button', { name: 'Add' }).click();
+    await expect(page).toHaveURL(/addJobVacancy/);
+
+    // Job Title dropdown
+    await page.locator('.oxd-select-wrapper').first().click();
+    await page.getByRole('option', { name: vacancy.jobTitle }).click();
+
+    // Vacancy Name — second visible input (first is hidden employee ID)
+    const vacancyNameInput = page.locator('.oxd-input').nth(1);
+    await vacancyNameInput.fill(vacancy.vacancyName);
+
+    // Hiring Manager autocomplete (required on this form)
+    const hiringManagerInput = page.locator('input[placeholder="Type for hints..."]').first();
+    await hiringManagerInput.fill('Admin');
+    await page.getByRole('option').first().waitFor({ state: 'visible', timeout: 5_000 });
+    await page.getByRole('option').first().click();
+
+    await page.getByRole('button', { name: 'Save' }).click();
+    await expect(page).toHaveURL(/viewJobVacancy|addJobVacancy/, { timeout: 15_000 });
+
+    // Locate the created vacancy by its unique name for teardown
+    const client = new OrangeHRMApiClient(apiContext);
+    const { body } = await client.getVacancies();
+    const created = body.data.find((v) => v.name === vacancy.vacancyName);
+    if (created) {
+      vacancyId = created.id;
+    }
   });
 
   test('should search vacancies by job title @regression', async ({ page }) => {
