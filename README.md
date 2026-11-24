@@ -20,6 +20,9 @@ Playwright test automation framework covering Page Object Model (POM), BDD with 
 | [Pact](https://docs.pact.io) | 17.x | Consumer-driven contract testing |
 | Allure | 2.x | HTML test reporting with GitHub Pages publish |
 | ESLint + Prettier | 9.x / 3.x | Static analysis and formatting, enforced in CI |
+| Husky + commitlint | 9.x / 21.x | Git hooks — pre-commit validate gate + Conventional Commits |
+| Docker | — | Containerised test runs via official Playwright image |
+| Jenkins | — | Parameterised declarative pipeline with shard support |
 | GitHub Actions | — | CI/CD pipeline with code-quality gate |
 | Jira REST API v3 | — | Auto-create tickets on failure |
 
@@ -68,6 +71,7 @@ The framework follows a **3-layer architecture** that covers three distinct test
     ┌──────────────┬──────────────┬────────────┬────────────┐
     │  Reporters   │    Utils     │   Config   │  CI / Env  │
     │ jira.reporter│ test-data.ts │ pw.config  │ GH Actions │
+    │flaky.reporter│  logger.ts   │            │ Docker/CI  │
     └──────────────┴──────────────┴────────────┴────────────┘
 ```
 
@@ -115,10 +119,12 @@ flowchart TB
 
     subgraph Support["Support Layer"]
         R[JiraReporter]
+        L[Logger]
         U[test-data.ts]
         C[playwright.config.ts]
     end
 
+    R --> L
     T1 --> S1
     T2 --> M1
     T2 --> M2
@@ -259,11 +265,21 @@ playwright-e2e-suite/
 │   │   └── flaky.reporter.ts    # Tracks flaky tests, fails CI if threshold exceeded
 │   └── utils/
 │       ├── test-data.ts         # Centralised test data constants
-│       └── test-data.factory.ts # Factory functions for unique test data per run
+│       ├── test-data.factory.ts # Factory functions for unique test data per run
+│       ├── logger.ts            # Structured logger — pretty locally, NDJSON in CI
+│       ├── index.ts             # Barrel re-export for utils
+│       └── logger.test.ts       # Standalone test script for Logger
 ├── docs/
 │   └── test-cases.md            # Manual test case reference
 ├── .github/workflows/
 │   └── playwright.yml           # CI/CD pipeline with code-quality gate
+├── .husky/
+│   └── pre-commit               # Runs npm run validate before every commit
+├── Dockerfile                   # Playwright image — installs deps, runs validate gate
+├── docker-compose.yml           # Services: smoke, regression, shard-1 to shard-4
+├── Jenkinsfile                  # Declarative pipeline with parameterised shard support
+├── .dockerignore                # Excludes node_modules, .env, playwright/.auth
+├── commitlint.config.ts         # Conventional Commits enforcement
 ├── playwright.config.ts
 └── .env.example
 ```
@@ -378,13 +394,85 @@ npm run validate           # All three in one — typecheck + lint + format
 npm run ai:validate        # Run schema, traceability, duplicate, and review-gate checks
 ```
 
+### Docker
+
+```bash
+# Smoke tests (Chromium)
+docker compose run --rm smoke
+
+# Regression suite
+docker compose run --rm regression
+
+# Full suite — 4 parallel shards
+docker compose up shard-1 shard-2 shard-3 shard-4
+
+# Pass custom credentials
+BASE_URL=https://your-env.example.com \
+ADMIN_USERNAME=admin \
+ADMIN_PASSWORD=secret \
+docker compose run --rm smoke
+```
+
+Artifacts (test-results, playwright-report, allure-results) are written to the matching host directories via mounted volumes.
+
+---
+
+## Git Hooks & Commit Convention
+
+[Husky](https://typicode.github.io/husky/) installs a `pre-commit` hook that runs `npm run validate` (typecheck + lint + format) before every commit. Commits that introduce type errors, lint violations, or formatting drift are rejected locally — matching the CI code-quality gate.
+
+Commit messages are enforced by [commitlint](https://commitlint.js.org/) using the Conventional Commits spec:
+
+```
+feat: add structured logger utility
+fix: resolve stale locator in leave list page
+chore: update Playwright to 1.49.1
+```
+
+Allowed types: `feat`, `fix`, `chore`, `docs`, `style`, `refactor`, `test`, `ci`, `perf`, `revert`.
+
+---
+
+## Jenkins Pipeline
+
+`Jenkinsfile` defines a declarative pipeline that runs inside the official `mcr.microsoft.com/playwright:v1.49.1-jammy` Docker image.
+
+**Parameters** (configurable per build):
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `TEST_TYPE` | `all` | `all` / `smoke` / `regression` |
+| `BROWSER` | `chromium` | `chromium` / `firefox` / `all` (smoke runs only) |
+| `SHARD_COUNT` | `4` | Number of parallel shards (used when `TEST_TYPE=all`) |
+
+**Stages:** Checkout → Install (`npm ci`) → Validate (`npm run validate`) → Run Tests
+
+When `TEST_TYPE=all`, the pipeline fans out into N parallel shard stages using Jenkins' `parallel` map — each shard runs `npx playwright test --shard=N/total`.
+
+**Artifacts published per run:**
+- Playwright HTML report (linked to build via `publishHTML`)
+- `test-results/**/*` and `allure-results/**/*` as downloadable archives
+
 ---
 
 ## 🔧 Key Design Patterns
 
+### Getter-Based Locators
+
+Page object locators are defined as TypeScript `get` accessors rather than constructor-assigned properties:
+
+```typescript
+// tests/pages/login.page.ts
+get usernameInput(): Locator { return this.page.locator('[name="username"]'); }
+get passwordInput(): Locator { return this.page.locator('[name="password"]'); }
+get loginButton():   Locator { return this.page.locator('[type="submit"]'); }
+```
+
+Each call re-evaluates the locator against the current DOM snapshot — the same behaviour Playwright recommends for robust element selection. Stale element errors that plague eager assignment don't occur here.
+
 ### Page Object Model
 
-All pages extend a shared `BasePage` that provides reusable helpers (`waitForPageLoad`, `getToastMessage`, `clickNavMenuItem`). Locators are defined as typed `Locator` properties — no raw selectors scattered across tests.
+All pages extend a shared `BasePage` that provides reusable helpers (`waitForPageLoad`, `getToastMessage`, `clickNavMenuItem`). Locators are defined as typed `Locator` getter properties — no raw selectors scattered across tests.
 
 ### BDD with Playwright-BDD v8
 
@@ -412,6 +500,22 @@ import { createEmployeeData } from '../utils/test-data.factory';
 const employee = createEmployeeData({ firstName: 'Override' });
 // { firstName: 'Override', middleName: 'QA', lastName: 'Test-3f2a1b4c', employeeId: 'EMP-3f2a1b4c' }
 ```
+
+### Structured Logger
+
+`tests/utils/logger.ts` provides a thin context-tagged logger used by reporters and utilities. Output format adapts to environment:
+
+```typescript
+import { Logger } from '../utils/logger';
+
+const logger = new Logger('JiraReporter');
+logger.info('Creating Jira ticket for failed test');
+logger.error('Jira API call failed', err);
+```
+
+- **Local (non-CI):** pretty-printed `[ISO timestamp] [LEVEL] [context] message`
+- **CI (`process.env.CI` truthy):** NDJSON — `{"ts":"...","level":"INFO","ctx":"JiraReporter","msg":"..."}` — machine-parseable for log aggregators
+- Supports `DEBUG / INFO / WARN / ERROR` levels with a global filter (`Logger.setLogLevel()`)
 
 ### Jira Integration
 
