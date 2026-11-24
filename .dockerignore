@@ -1,0 +1,11 @@
+node_modules/
+test-results/
+playwright-report/
+allure-results/
+allure-report/
+playwright/.auth/
+.env
+*.zip
+pacts/
+.git/
+.superpowers/
