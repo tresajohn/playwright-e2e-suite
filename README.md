@@ -23,6 +23,164 @@ Playwright test automation framework demonstrating Page Object Model (POM), BDD 
 
 ---
 
+## 🏗️ Architecture
+
+### Three-Layer Architecture
+
+The framework follows a **3-layer architecture** that covers three distinct test types — BDD, POM E2E, and API — while keeping concerns cleanly separated:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    LAYER 3: TESTS                           │
+│  BDD:  features/**/*.feature  +  steps/**/*.steps.ts        │
+│  POM:  tests/e2e/**/*.spec.ts                               │
+│  API:  tests/e2e/api/*.api.spec.ts                          │
+│  • Gherkin scenarios, test assertions, API validations      │
+│  • Grouped by tag: @smoke, @regression, @bdd, @api          │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│            LAYER 2: FIXTURES & STEP DEFINITIONS             │
+│  tests/fixtures/auth.fixture.ts  (POM — storageState auth)  │
+│  tests/fixtures/bdd.fixture.ts   (BDD — createBdd() wiring) │
+│  steps/auth/  steps/pim/  steps/leave/  steps/recruitment/  │
+│  • Injects page objects into BDD step defs via createBdd()  │
+│  • Pre-authenticated session shared across all test types   │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│             LAYER 1: PAGE OBJECTS & API CLIENT              │
+│  tests/pages/base.page.ts   tests/pages/login.page.ts  ...  │
+│  tests/api/orangehrm-api.client.ts                          │
+│  • Typed Locator properties — no raw selectors in tests     │
+│  • Typed API methods wrapping Playwright APIRequestContext  │
+│  • BasePage provides shared helpers (toast, nav, waits)     │
+└─────────────────────────────────────────────────────────────┘
+
+                      Support Layer
+    ┌──────────────┬──────────────┬────────────┬────────────┐
+    │  Reporters   │    Utils     │   Config   │  CI / Env  │
+    │ jira.reporter│ test-data.ts │ pw.config  │ GH Actions │
+    └──────────────┴──────────────┴────────────┴────────────┘
+```
+
+### Layer Responsibilities
+
+| Layer | What goes here | What stays out |
+|-------|----------------|----------------|
+| **Tests** | Assertions, Gherkin steps, test tags | Business orchestration, locators |
+| **Fixtures & Steps** | Auth state setup, page object injection | Test assertions, raw browser calls |
+| **Pages & API Client** | Locators, typed API methods, BasePage helpers | Test logic, assertions |
+
+---
+
+## 📊 Flow Diagrams
+
+### Test Execution Flow
+
+```mermaid
+flowchart TB
+    subgraph Tests["Layer 3: Tests"]
+        T1[BDD Feature Files]
+        T2[POM Spec Files]
+        T3[API Spec Files]
+    end
+
+    subgraph Fixtures["Layer 2: Fixtures & Steps"]
+        F1[auth.fixture.ts]
+        F2[bdd.fixture.ts]
+        S1[Step Definitions]
+    end
+
+    subgraph Pages["Layer 1: Pages & API Client"]
+        P1[BasePage]
+        P2[LoginPage]
+        P3[DashboardPage]
+        P4[PIM / Leave / Recruitment Pages]
+        A1[OrangeHRMApiClient]
+    end
+
+    subgraph Support["Support Layer"]
+        R[JiraReporter]
+        U[test-data.ts]
+        C[playwright.config.ts]
+    end
+
+    T1 --> S1
+    T2 --> F1
+    T3 --> A1
+
+    S1 --> F2
+    F2 --> P2
+    F2 --> P3
+    F2 --> P4
+
+    F1 --> P1
+    P2 --> P1
+    P3 --> P1
+    P4 --> P1
+
+    Tests --> U
+    Tests --> C
+    Tests --> R
+```
+
+### Login Flow (BDD Path)
+
+```mermaid
+sequenceDiagram
+    participant Feature as login.feature
+    participant Step as login.steps.ts
+    participant Fix as bdd.fixture.ts
+    participant Page as LoginPage
+    participant Browser as Browser
+
+    Feature->>Step: Given I navigate to the login page
+    Step->>Fix: loginPage (injected fixture)
+    Fix->>Page: new LoginPage(page)
+    Step->>Page: navigate()
+    Page->>Browser: goto('/web/index.php/auth/login')
+
+    Feature->>Step: When I enter valid credentials
+    Step->>Page: enterUsername(username)
+    Page->>Browser: fill('[name="username"]', username)
+    Step->>Page: enterPassword(password)
+    Page->>Browser: fill('[name="password"]', password)
+    Step->>Page: clickLogin()
+    Page->>Browser: click('[type="submit"]')
+
+    Feature->>Step: Then I should see the dashboard
+    Step->>Page: isDashboardVisible()
+    Page-->>Step: assertion passes
+    Step-->>Feature: scenario passes
+```
+
+### CI/CD Pipeline Flow
+
+```mermaid
+flowchart LR
+    A[Push / PR] --> B[smoke-tests]
+    B -->|pass| C[regression-tests]
+    B -->|pass| D[bdd-tests]
+    B -->|pass| E[api-tests]
+    B -->|fail| Z[Block merge]
+
+    C --> F[publish-report]
+    D --> F
+    E --> F
+
+    F --> G[GitHub Pages\nAllure Report]
+
+    C -->|test fails| H[JiraReporter]
+    D -->|test fails| H
+    E -->|test fails| H
+    H --> I[Jira Ticket\nHigh / Medium priority]
+```
+
+---
+
 ## Project Structure
 
 ```
@@ -161,7 +319,7 @@ npm run report
 
 ---
 
-## Key Design Patterns
+## 🔧 Key Design Patterns
 
 ### Page Object Model
 
