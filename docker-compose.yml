@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  playwright-base:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - CI=true
+      - HUSKY=0
+      - BASE_URL=${BASE_URL:-https://opensource-demo.orangehrmlive.com}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-Admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+    volumes:
+      - ./test-results:/app/test-results
+      - ./playwright-report:/app/playwright-report
+      - ./allure-results:/app/allure-results
+
+  smoke:
+    extends:
+      service: playwright-base
+    command: npx playwright test --grep "@smoke" --project=chromium
+    container_name: playwright-smoke
+
+  regression:
+    extends:
+      service: playwright-base
+    command: npx playwright test --grep "@regression"
+    container_name: playwright-regression
+
+  shard-1:
+    extends:
+      service: playwright-base
+    command: npx playwright test --shard=1/4
+    container_name: playwright-shard-1
+
+  shard-2:
+    extends:
+      service: playwright-base
+    command: npx playwright test --shard=2/4
+    container_name: playwright-shard-2
+
+  shard-3:
+    extends:
+      service: playwright-base
+    command: npx playwright test --shard=3/4
+    container_name: playwright-shard-3
+
+  shard-4:
+    extends:
+      service: playwright-base
+    command: npx playwright test --shard=4/4
+    container_name: playwright-shard-4
