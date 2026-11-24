@@ -20,9 +20,13 @@
     "validate": "npm run typecheck && npm run lint && npm run format:check",
     "audit": "npm audit --audit-level=critical",
     "ai:validate": "npx tsx tests/ai-validation/index.ts",
-    "test:contracts": "npx playwright test --project=contracts"
+    "test:contracts": "npx playwright test --project=contracts",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@commitlint/types": "^21.2.3",
     "@eslint/js": "^9.39.5",
     "@pact-foundation/pact": "^17.1.4",
     "@playwright/test": "1.49.1",
@@ -35,6 +39,7 @@
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-playwright": "^2.12.2",
+    "husky": "^9.1.7",
     "playwright-bdd": "^8.5.1",
     "prettier": "^3.10.1",
     "tsx": "^4.23.15",
