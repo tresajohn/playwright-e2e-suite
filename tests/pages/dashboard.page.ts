@@ -1,22 +1,28 @@
-import { Page, Locator, expect } from '@playwright/test';
+import { Page, expect } from '@playwright/test';
 import { BasePage } from './base.page';
 
 export class DashboardPage extends BasePage {
-  readonly dashboardHeading: Locator;
-  readonly quickLaunchWidget: Locator;
-  readonly timeAtWorkWidget: Locator;
-  readonly myActionsWidget: Locator;
-  readonly userDropdown: Locator;
-  readonly sideNavMenu: Locator;
-
   constructor(page: Page) {
     super(page);
-    this.dashboardHeading = page.getByRole('heading', { name: 'Dashboard' });
-    this.quickLaunchWidget = page.locator('.orangehrm-quick-launch');
-    this.timeAtWorkWidget = page.locator('.orangehrm-attendance-card');
-    this.myActionsWidget = page.locator('.orangehrm-my-actions');
-    this.userDropdown = page.locator('.oxd-userdropdown');
-    this.sideNavMenu = page.locator('.oxd-sidepanel');
+  }
+
+  get dashboardHeading() {
+    return this.page.getByRole('heading', { name: 'Dashboard' });
+  }
+  get quickLaunchWidget() {
+    return this.page.locator('.orangehrm-quick-launch');
+  }
+  get timeAtWorkWidget() {
+    return this.page.locator('.orangehrm-attendance-card');
+  }
+  get myActionsWidget() {
+    return this.page.locator('.orangehrm-my-actions');
+  }
+  get userDropdown() {
+    return this.page.locator('.oxd-userdropdown');
+  }
+  get sideNavMenu() {
+    return this.page.locator('.oxd-sidepanel');
   }
 
   async goto(): Promise<void> {

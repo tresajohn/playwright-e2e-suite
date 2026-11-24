@@ -1,22 +1,28 @@
-import { Page, Locator, expect } from '@playwright/test';
+import { Page, expect } from '@playwright/test';
 import { BasePage } from './base.page';
 
 export class LoginPage extends BasePage {
-  readonly usernameInput: Locator;
-  readonly passwordInput: Locator;
-  readonly loginButton: Locator;
-  readonly errorAlert: Locator;
-  readonly forgotPasswordLink: Locator;
-  readonly logoImage: Locator;
-
   constructor(page: Page) {
     super(page);
-    this.usernameInput = page.getByPlaceholder('Username');
-    this.passwordInput = page.getByPlaceholder('Password');
-    this.loginButton = page.getByRole('button', { name: 'Login' });
-    this.errorAlert = page.locator('.oxd-alert-content-text');
-    this.forgotPasswordLink = page.getByText('Forgot your password?');
-    this.logoImage = page.locator('.orangehrm-login-logo');
+  }
+
+  get usernameInput() {
+    return this.page.getByPlaceholder('Username');
+  }
+  get passwordInput() {
+    return this.page.getByPlaceholder('Password');
+  }
+  get loginButton() {
+    return this.page.getByRole('button', { name: 'Login' });
+  }
+  get errorAlert() {
+    return this.page.locator('.oxd-alert-content-text');
+  }
+  get forgotPasswordLink() {
+    return this.page.getByText('Forgot your password?');
+  }
+  get logoImage() {
+    return this.page.locator('.orangehrm-login-logo');
   }
 
   async goto(): Promise<void> {

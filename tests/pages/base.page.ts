@@ -1,14 +1,17 @@
-import { Page, Locator, expect } from '@playwright/test';
+import { Page, expect } from '@playwright/test';
 
 export abstract class BasePage {
   readonly page: Page;
-  readonly pageLoader: Locator;
-  readonly toastMessage: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.pageLoader = page.locator('.oxd-loading-spinner');
-    this.toastMessage = page.locator('.oxd-toast');
+  }
+
+  get pageLoader() {
+    return this.page.locator('.oxd-loading-spinner');
+  }
+  get toastMessage() {
+    return this.page.locator('.oxd-toast');
   }
 
   async waitForPageLoad(): Promise<void> {
