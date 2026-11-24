@@ -1,6 +1,7 @@
 import type { Reporter, TestCase, TestResult, FullResult } from '@playwright/test/reporter';
 import fs from 'fs';
 import path from 'path';
+import { Logger } from '../utils/logger';
 
 interface AttemptRecord {
   retry: number;
@@ -27,6 +28,7 @@ interface FlakyReport {
 class FlakyReporter implements Reporter {
   readonly attempts: Map<string, AttemptRecord[]> = new Map();
   private testMeta: Map<string, { title: string; file: string }> = new Map();
+  private readonly logger = new Logger('FlakyReporter');
 
   onTestEnd(test: TestCase, result: TestResult): void {
     if (!this.attempts.has(test.id)) {
@@ -79,8 +81,8 @@ class FlakyReporter implements Reporter {
     fs.writeFileSync(path.join(outputDir, 'flaky-report.json'), JSON.stringify(report, null, 2));
 
     if (thresholdExceeded && process.env.CI) {
-      console.error(
-        `\nFlaky rate ${(flakyRate * 100).toFixed(1)}% exceeded threshold ${(threshold * 100).toFixed(0)}%. Flaky tests: ${flakyCount}/${totalTests}`
+      this.logger.error(
+        `Flaky rate ${(flakyRate * 100).toFixed(1)}% exceeded threshold ${(threshold * 100).toFixed(0)}%. Flaky tests: ${flakyCount}/${totalTests}`
       );
       process.exitCode = 1;
     }

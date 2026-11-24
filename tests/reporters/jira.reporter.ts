@@ -1,4 +1,5 @@
 import type { Reporter, TestCase, TestResult, FullResult } from '@playwright/test/reporter';
+import { Logger } from '../utils/logger';
 
 interface AdfNode {
   type: string;
@@ -10,6 +11,7 @@ interface AdfNode {
 
 class JiraReporter implements Reporter {
   private failures: Array<{ test: TestCase; result: TestResult }> = [];
+  private readonly logger = new Logger('JiraReporter');
 
   onTestEnd(test: TestCase, result: TestResult): void {
     // Only collect on the final attempt to avoid duplicate tickets per retry
@@ -25,11 +27,11 @@ class JiraReporter implements Reporter {
     const { JIRA_BASE_URL, JIRA_API_TOKEN, JIRA_EMAIL, JIRA_PROJECT_KEY } = process.env;
 
     if (!JIRA_BASE_URL || !JIRA_API_TOKEN || !JIRA_EMAIL || !JIRA_PROJECT_KEY) {
-      console.log('\n⚠️  Jira reporter: skipping ticket creation (env vars not set)');
+      this.logger.warn('Jira reporter: skipping ticket creation (env vars not set)');
       return;
     }
 
-    console.log(`\n🎫 Creating ${this.failures.length} Jira ticket(s) for failed tests...`);
+    this.logger.info(`Creating ${this.failures.length} Jira ticket(s) for failed tests...`);
 
     for (const { test, result } of this.failures) {
       await this.createTicket(test, result, {
@@ -195,8 +197,8 @@ class JiraReporter implements Reporter {
 
       if (response.ok) {
         const data = (await response.json()) as { key: string };
-        console.log(
-          `  ✅ ${data.key} — "${test.title}" [${isSmoke ? 'High' : 'Medium'}, ${testType}]`
+        this.logger.info(
+          `${data.key} — "${test.title}" [${isSmoke ? 'High' : 'Medium'}, ${testType}]`
         );
         const screenshot = result.attachments.find((a) => a.name === 'screenshot' && a.path);
         if (screenshot?.path) {
@@ -204,12 +206,12 @@ class JiraReporter implements Reporter {
         }
       } else {
         const text = await response.text();
-        console.error(
-          `  ❌ Failed to create ticket for "${test.title}": ${response.status} ${text}`
+        this.logger.error(
+          `Failed to create ticket for "${test.title}": ${response.status} ${text}`
         );
       }
     } catch (err) {
-      console.error(`  ❌ Jira API error for "${test.title}": ${err}`);
+      this.logger.error(`Jira API error for "${test.title}"`, err);
     }
   }
 
@@ -241,15 +243,15 @@ class JiraReporter implements Reporter {
       );
 
       if (attachResponse.ok) {
-        console.log(`    📎 Screenshot attached to ${issueKey}`);
+        this.logger.info(`Screenshot attached to ${issueKey}`);
       } else {
         const errorText = await attachResponse.text();
-        console.error(
-          `    ⚠️  Failed to attach screenshot to ${issueKey}: ${attachResponse.status} ${errorText}`
+        this.logger.error(
+          `Failed to attach screenshot to ${issueKey}: ${attachResponse.status} ${errorText}`
         );
       }
     } catch (err) {
-      console.error(`    ⚠️  Screenshot attachment error for ${issueKey}: ${err}`);
+      this.logger.error(`Screenshot attachment error for ${issueKey}`, err);
     }
   }
 }
