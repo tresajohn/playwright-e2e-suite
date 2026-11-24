@@ -9,10 +9,10 @@ test.describe('Login', () => {
   });
 
   test('should login successfully with valid admin credentials @smoke', async ({
-    loginPage,
+    loginModule,
     page,
   }) => {
-    await loginPage.login(ADMIN_USER.username, ADMIN_USER.password);
+    await loginModule.login(ADMIN_USER.username, ADMIN_USER.password);
     await expect(page).toHaveURL(/dashboard/);
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
   });
@@ -48,17 +48,20 @@ test.describe('Login', () => {
     await expect(loginPage.passwordInput).toHaveAttribute('type', 'password');
   });
 
-  test('should logout successfully and redirect to login @smoke', async ({ loginPage, page }) => {
-    await loginPage.login(ADMIN_USER.username, ADMIN_USER.password);
+  test('should logout successfully and redirect to login @smoke', async ({
+    loginModule,
+    page,
+  }) => {
+    await loginModule.login(ADMIN_USER.username, ADMIN_USER.password);
     await expect(page).toHaveURL(/dashboard/);
-    await page.locator('.oxd-userdropdown').click();
-    await page.getByRole('menuitem', { name: 'Logout' }).click();
+    await loginModule.logout();
     await expect(page).toHaveURL(/auth\/login/);
-    await loginPage.expectLoginPageVisible();
+    await loginModule.expectLoginPageVisible();
   });
 
   test('should clear fields and re-login after failed attempt @regression', async ({
     loginPage,
+    loginModule,
     page,
   }) => {
     await loginPage.login(INVALID_USER.username, INVALID_USER.password);
@@ -66,7 +69,7 @@ test.describe('Login', () => {
 
     await loginPage.usernameInput.clear();
     await loginPage.passwordInput.clear();
-    await loginPage.login(ADMIN_USER.username, ADMIN_USER.password);
+    await loginModule.login(ADMIN_USER.username, ADMIN_USER.password);
     await expect(page).toHaveURL(/dashboard/);
   });
 });
