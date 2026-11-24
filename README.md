@@ -2,7 +2,7 @@
 
 [![Playwright Tests](https://github.com/tresajohn/playwright-e2e-suite/actions/workflows/playwright.yml/badge.svg)](https://github.com/tresajohn/playwright-e2e-suite/actions/workflows/playwright.yml)
 
-Playwright test automation framework demonstrating Page Object Model (POM), BDD with Gherkin, API testing, CI/CD via GitHub Actions, and automated Jira ticket creation on test failure.
+Playwright test automation framework covering Page Object Model (POM), BDD with Gherkin, REST API testing, Pact consumer-driven contract testing, flaky test detection, an AI-generated scenario validation pipeline, CI/CD via GitHub Actions, and automated Jira ticket creation on test failure.
 
 **Target application:** [OrangeHRM Demo](https://opensource-demo.orangehrmlive.com) — an open-source HR management system
 
@@ -14,11 +14,13 @@ Playwright test automation framework demonstrating Page Object Model (POM), BDD 
 
 | Tool | Version | Purpose |
 |------|---------|---------|
-| [Playwright](https://playwright.dev) | 1.49.1 | Browser automation & test runner |
+| [Playwright](https://playwright.dev) | 1.49.1 | Browser automation & test runner (Chromium + Firefox) |
 | [playwright-bdd](https://vitalets.github.io/playwright-bdd) | 8.x | Gherkin/Cucumber BDD layer |
 | TypeScript | 5.x | Type-safe test code |
-| Allure | 2.x | HTML test reporting |
-| GitHub Actions | — | CI/CD pipeline |
+| [Pact](https://docs.pact.io) | 17.x | Consumer-driven contract testing |
+| Allure | 2.x | HTML test reporting with GitHub Pages publish |
+| ESLint + Prettier | 9.x / 3.x | Static analysis and formatting, enforced in CI |
+| GitHub Actions | — | CI/CD pipeline with code-quality gate |
 | Jira REST API v3 | — | Auto-create tickets on failure |
 
 ---
@@ -209,6 +211,18 @@ playwright-e2e-suite/
 │   │   └── recruitment/recruitment.spec.ts
 │   ├── api/
 │   │   └── orangehrm-api.client.ts  # Typed API client
+│   ├── contracts/               # Pact consumer-driven contract tests
+│   │   ├── employees.pact.spec.ts
+│   │   ├── leave-types.pact.spec.ts
+│   │   ├── vacancies.pact.spec.ts
+│   │   └── pact.config.ts
+│   ├── ai-validation/           # AI-generated scenario validation pipeline
+│   │   ├── index.ts             # Orchestrator — runs all 4 checks
+│   │   ├── validate-scenarios.ts   # Schema validation (AJV)
+│   │   ├── traceability.ts         # Requirement coverage check
+│   │   ├── duplicate-detector.ts   # Jaccard similarity deduplication
+│   │   ├── review-gate.ts          # Human approval gate
+│   │   └── schemas/             # JSON schemas for scenario validation
 │   ├── fixtures/                # Custom Playwright fixtures
 │   │   ├── auth.fixture.ts      # POM fixture (extends @playwright/test)
 │   │   └── bdd.fixture.ts       # BDD fixture (extends playwright-bdd)
@@ -218,11 +232,15 @@ playwright-e2e-suite/
 │   │   ├── dashboard.page.ts
 │   │   └── pim/
 │   ├── reporters/
-│   │   └── jira.reporter.ts     # Custom reporter — creates Jira tickets on failure
+│   │   ├── jira.reporter.ts     # Custom reporter — creates Jira tickets on failure
+│   │   └── flaky.reporter.ts    # Tracks flaky tests, fails CI if threshold exceeded
 │   └── utils/
-│       └── test-data.ts         # Centralised test data constants
+│       ├── test-data.ts         # Centralised test data constants
+│       └── test-data.factory.ts # Factory functions for unique test data per run
+├── docs/
+│   └── test-cases.md            # Manual test case reference
 ├── .github/workflows/
-│   └── playwright.yml           # CI/CD pipeline
+│   └── playwright.yml           # CI/CD pipeline with code-quality gate
 ├── playwright.config.ts
 └── .env.example
 ```
@@ -259,6 +277,14 @@ playwright-e2e-suite/
 | Leave Management | 6 | `@bdd`, `@smoke`, `@regression` |
 | Recruitment | 7 | `@bdd`, `@smoke`, `@regression` |
 
+### Contract Tests — 3 Pact spec files (consumer-driven)
+
+| Contract | Interactions | Provider |
+|----------|-------------|---------|
+| Employees contract | List employees response shape | OrangeHRM API |
+| Leave types contract | Leave types list response shape | OrangeHRM API |
+| Vacancies contract | Vacancies list response shape | OrangeHRM API |
+
 ---
 
 ## Setup
@@ -292,7 +318,7 @@ JIRA_PROJECT_KEY=KAN
 ## Running Tests
 
 ```bash
-# Full suite
+# Full suite (Chromium + Firefox)
 npm test
 
 # Smoke tests only
@@ -307,6 +333,9 @@ npx playwright test --project=bdd-chromium
 # API tests only
 npx playwright test --project=api
 
+# Contract tests (Pact)
+npm run test:contracts
+
 # Headed mode (watch the browser)
 npm run test:headed
 
@@ -315,6 +344,15 @@ npm run test:ui
 
 # View HTML report
 npm run report
+
+# Code quality checks
+npm run typecheck          # TypeScript type checking
+npm run lint               # ESLint
+npm run format:check       # Prettier check
+npm run validate           # All three in one — typecheck + lint + format
+
+# AI test validation pipeline
+npm run ai:validate        # Run schema, traceability, duplicate, and review-gate checks
 ```
 
 ---
@@ -341,20 +379,123 @@ A dedicated `auth.setup.ts` runs once before all tests, logs in, and saves the b
 
 Login and logout tests override the shared auth state with an empty cookie jar (`test.use({ storageState: { cookies: [], origins: [] } })`), ensuring they test real authentication flows without polluting the shared session.
 
+### Test Data Factory
+
+A `createEmployeeData()` / `createVacancyData()` factory pattern generates unique entities per run using `randomUUID()` suffixes. Each test receives its own isolated data — no hardcoded names, no cross-test collisions on the shared demo app.
+
+```typescript
+import { createEmployeeData } from '../utils/test-data.factory';
+
+const employee = createEmployeeData({ firstName: 'Override' });
+// { firstName: 'Override', middleName: 'QA', lastName: 'Test-3f2a1b4c', employeeId: 'EMP-3f2a1b4c' }
+```
+
 ### Jira Integration
 
 A custom Playwright `Reporter` reads test results and creates Jira issues for every failure on its final retry attempt. Priority is set to **High** for `@smoke` failures and **Medium** for `@regression`. The reporter silently skips if `JIRA_API_TOKEN` is not configured — safe for local runs and forks.
 
 ---
 
+## Flaky Test Detection
+
+A custom `FlakyReporter` (`tests/reporters/flaky.reporter.ts`) tracks every test retry across a run. At the end of the suite it emits `test-results/flaky-report.json` and **fails the CI job if the flaky rate exceeds a configurable threshold** (default 10%).
+
+```json
+{
+  "runDate": "2025-04-01T10:00:00Z",
+  "totalTests": 88,
+  "flakyCount": 2,
+  "flakyRate": 0.023,
+  "threshold": 0.10,
+  "thresholdExceeded": false,
+  "flakyTests": [
+    { "title": "should add employee", "file": "pim/employee.spec.ts", "passedOnAttempt": 1 }
+  ]
+}
+```
+
+The threshold is configurable via `FLAKY_THRESHOLD` env var. This prevents flaky tests from silently accumulating — a common blind spot in automation suites.
+
+---
+
+## Contract Testing (Pact)
+
+Three consumer-driven Pact contract specs in `tests/contracts/` verify the shape of OrangeHRM's REST API responses without hitting the real server.
+
+```
+Consumer (this framework)  →  Pact mock server  →  Pact file (.json)
+                                                          ↓
+                                            Provider verifies on their end
+```
+
+Each spec uses `PactV3` with `MatchersV3` to define **flexible contracts** — checking structure and types, not exact values:
+
+```typescript
+willRespondWith: {
+  status: 200,
+  body: {
+    data: eachLike({
+      empNumber: integer(1),
+      firstName: pactString('John'),
+      lastName:  pactString('Smith'),
+    }),
+    meta: { total: integer(1) },
+  },
+}
+```
+
+Contracts are generated as `.json` pact files and uploaded as CI artifacts. They serve as a living API specification that breaks immediately if the provider changes a field shape or removes an endpoint.
+
+---
+
+## AI Test Validation Pipeline
+
+`tests/ai-validation/` is a pre-promotion gate for AI-generated test scenarios. Before any AI-authored scenario enters the live suite, it must pass four automated checks (`npm run ai:validate`):
+
+| Step | Check | Failure = |
+|------|-------|-----------|
+| 1 | **Schema validation** — scenario JSON matches the defined AJV schema | Malformed scenario blocked |
+| 2 | **Traceability** — every scenario maps to a known requirement ID | Orphaned scenario blocked |
+| 3 | **Duplicate detection** — Jaccard similarity ≥ 0.60 flags redundant scenarios | Duplicate pair flagged for review |
+| 4 | **Human review gate** — scenario must be explicitly approved before promotion | Unapproved scenario blocked |
+
+```
+═══════════════════════════════════════════════════
+  AI Test Validation Pipeline
+═══════════════════════════════════════════════════
+  Validating 12 AI-generated scenarios
+
+[1/4] Schema Validation
+  ✔ All 12 scenarios match the schema
+
+[2/4] Traceability Check
+  ✔ All scenarios map to a known requirement
+  ✔ All requirements have at least one scenario
+
+[3/4] Duplicate Detection
+  ✔ No duplicate scenarios detected
+
+[4/4] Human Review Gate
+  ✔ Approved:  12 scenario(s)
+
+✔ All checks passed — scenarios are ready for promotion
+═══════════════════════════════════════════════════
+```
+
+Exit code `0` = all checks pass, `1` = one or more checks failed — wires cleanly into CI.
+
+---
+
 ## CI/CD Pipeline
 
-Five GitHub Actions jobs defined in `.github/workflows/playwright.yml`:
+Six GitHub Actions jobs defined in `.github/workflows/playwright.yml`:
 
 | Job | Trigger | Scope |
 |-----|---------|-------|
-| `smoke-tests` | Every push to main/develop | `@smoke` on Chromium |
-| `regression-tests` | PR to main / push to main | Full suite on Chromium — needs smoke to pass |
+| `code-quality` | Every push / PR | TypeScript check + ESLint + Prettier + `npm audit` — all other jobs depend on this |
+| `contract-tests` | Every push / PR | Pact specs — needs code-quality to pass |
+| `smoke-tests` | Every push to main/develop | `@smoke` on Chromium — includes flaky threshold check |
+| `regression-tests` | PR to main / push to main | Full suite on Chromium + Firefox — needs smoke to pass |
 | `bdd-tests` | PR to main / push to main | BDD project on Chromium — needs smoke to pass |
 | `api-tests` | PR to main / push to main | API project — needs smoke to pass |
 | `publish-report` | Push to main | Merges Allure results from all jobs → deploys to GitHub Pages |
