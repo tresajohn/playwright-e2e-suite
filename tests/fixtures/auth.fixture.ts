@@ -7,6 +7,7 @@ import { LoginModule } from '../modules/login.module';
 import { EmployeeModule } from '../modules/employee.module';
 import { LeaveModule } from '../modules/leave.module';
 import { RecruitmentModule } from '../modules/recruitment.module';
+import { DashboardModule } from '../modules/dashboard.module';
 
 // TEST-scoped: each fixture depends on `page`, which is test-scoped.
 // A fresh page — and therefore a fresh POM instance — is created per test.
@@ -19,6 +20,7 @@ type OrangeHRMFixtures = {
   employeeModule: EmployeeModule;
   leaveModule: LeaveModule;
   recruitmentModule: RecruitmentModule;
+  dashboardModule: DashboardModule;
 };
 
 // WORKER-scoped: worker fixtures are declared separately and shared across
@@ -68,6 +70,12 @@ export const test = base.extend<OrangeHRMFixtures, OrangeHRMWorkerFixtures>({
 
   recruitmentModule: async ({ page, apiContext }, use) => {
     await use(new RecruitmentModule(page, apiContext));
+  },
+
+  dashboardModule: async ({ page }, use) => {
+    const module = new DashboardModule(page);
+    await module.goto();
+    await use(module);
   },
 
   apiContext: [
