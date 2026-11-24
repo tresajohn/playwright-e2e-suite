@@ -43,11 +43,13 @@ The framework follows a **3-layer architecture** that covers three distinct test
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│            LAYER 2: FIXTURES & STEP DEFINITIONS             │
-│  tests/fixtures/auth.fixture.ts  (POM — storageState auth)  │
-│  tests/fixtures/bdd.fixture.ts   (BDD — createBdd() wiring) │
+│          LAYER 2: MODULES + FIXTURES + STEP DEFS            │
+│  tests/modules/  LoginModule  EmployeeModule  LeaveModule   │
+│                  RecruitmentModule  DashboardModule         │
+│  tests/fixtures/auth.fixture.ts   bdd.fixture.ts            │
 │  steps/auth/  steps/pim/  steps/leave/  steps/recruitment/  │
-│  • Injects page objects into BDD step defs via createBdd()  │
+│  • Multi-step business workflows (login, addEmployee, etc.) │
+│  • Injects modules + pages via Playwright fixture DI        │
 │  • Pre-authenticated session shared across all test types   │
 └─────────────────────────────────────────────────────────────┘
                             │
@@ -55,6 +57,7 @@ The framework follows a **3-layer architecture** that covers three distinct test
 ┌─────────────────────────────────────────────────────────────┐
 │             LAYER 1: PAGE OBJECTS & API CLIENT              │
 │  tests/pages/base.page.ts   tests/pages/login.page.ts  ...  │
+│  tests/pages/leave/leave-list.page.ts                       │
 │  tests/api/orangehrm-api.client.ts                          │
 │  • Typed Locator properties — no raw selectors in tests     │
 │  • Typed API methods wrapping Playwright APIRequestContext  │
@@ -73,7 +76,8 @@ The framework follows a **3-layer architecture** that covers three distinct test
 | Layer | What goes here | What stays out |
 |-------|----------------|----------------|
 | **Tests** | Assertions, Gherkin steps, test tags | Business orchestration, locators |
-| **Fixtures & Steps** | Auth state setup, page object injection | Test assertions, raw browser calls |
+| **Modules** | Multi-step workflows (`login()`, `addEmployee()`, `addVacancy()`) | Assertions, test tags |
+| **Fixtures & Steps** | Auth state setup, module + page injection | Test assertions, raw browser calls |
 | **Pages & API Client** | Locators, typed API methods, BasePage helpers | Test logic, assertions |
 
 ---
@@ -90,7 +94,12 @@ flowchart TB
         T3[API Spec Files]
     end
 
-    subgraph Fixtures["Layer 2: Fixtures & Steps"]
+    subgraph Modules["Layer 2: Modules + Fixtures + Steps"]
+        M1[LoginModule]
+        M2[EmployeeModule]
+        M3[LeaveModule]
+        M4[RecruitmentModule]
+        M5[DashboardModule]
         F1[auth.fixture.ts]
         F2[bdd.fixture.ts]
         S1[Step Definitions]
@@ -111,15 +120,29 @@ flowchart TB
     end
 
     T1 --> S1
-    T2 --> F1
+    T2 --> M1
+    T2 --> M2
+    T2 --> M3
+    T2 --> M4
+    T2 --> M5
     T3 --> A1
 
     S1 --> F2
     F2 --> P2
-    F2 --> P3
     F2 --> P4
 
-    F1 --> P1
+    F1 --> M1
+    F1 --> M2
+    F1 --> M3
+    F1 --> M4
+    F1 --> M5
+
+    M1 --> P2
+    M2 --> P4
+    M3 --> P4
+    M4 --> A1
+    M5 --> P3
+
     P2 --> P1
     P3 --> P1
     P4 --> P1
