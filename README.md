@@ -634,6 +634,8 @@ Each job generates an Allure HTML report uploaded as a downloadable artifact (14
 
 ## Jira Integration
 
+📋 **[View KAN Board](https://tresajohn.atlassian.net/jira/software/projects/KAN/boards/2)** — live tickets auto-created by the reporter on test failure
+
 ### How it works
 
 A custom Playwright `Reporter` (`tests/reporters/jira.reporter.ts`) hooks into the test runner's `onTestEnd` event. When any test fails or times out in CI, it calls the Jira REST API v3 to create a Task ticket automatically — no manual step required.
