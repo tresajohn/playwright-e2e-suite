@@ -1,22 +1,28 @@
-import { Page, Locator, expect } from '@playwright/test';
+import { Page, expect } from '@playwright/test';
 import { BasePage } from '../base.page';
 
 export class AddEmployeePage extends BasePage {
-  readonly firstNameInput: Locator;
-  readonly middleNameInput: Locator;
-  readonly lastNameInput: Locator;
-  readonly employeeIdInput: Locator;
-  readonly saveButton: Locator;
-  readonly createLoginToggle: Locator;
-
   constructor(page: Page) {
     super(page);
-    this.firstNameInput = page.getByPlaceholder('First Name');
-    this.middleNameInput = page.getByPlaceholder('Middle Name');
-    this.lastNameInput = page.getByPlaceholder('Last Name');
-    this.employeeIdInput = page.locator('.orangehrm-employee-container .oxd-input').nth(0);
-    this.saveButton = page.getByRole('button', { name: 'Save' });
-    this.createLoginToggle = page.locator('.oxd-switch-input');
+  }
+
+  get firstNameInput() {
+    return this.page.getByPlaceholder('First Name');
+  }
+  get middleNameInput() {
+    return this.page.getByPlaceholder('Middle Name');
+  }
+  get lastNameInput() {
+    return this.page.getByPlaceholder('Last Name');
+  }
+  get employeeIdInput() {
+    return this.page.locator('.orangehrm-employee-container .oxd-input').nth(0);
+  }
+  get saveButton() {
+    return this.page.getByRole('button', { name: 'Save' });
+  }
+  get createLoginToggle() {
+    return this.page.locator('.oxd-switch-input');
   }
 
   async goto(): Promise<void> {

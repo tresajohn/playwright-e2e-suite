@@ -1,24 +1,31 @@
-import { Page, Locator, expect } from '@playwright/test';
+import { Page, expect } from '@playwright/test';
 import { BasePage } from '../base.page';
 
 export class EmployeeListPage extends BasePage {
-  readonly addEmployeeButton: Locator;
-  readonly employeeNameInput: Locator;
-  readonly employeeIdInput: Locator;
-  readonly searchButton: Locator;
-  readonly resetButton: Locator;
-  readonly employeeTable: Locator;
-  readonly noRecordsFound: Locator;
-
   constructor(page: Page) {
     super(page);
-    this.addEmployeeButton = page.getByRole('button', { name: 'Add' });
-    this.employeeNameInput = page.locator('input[placeholder="Type for hints..."]').first();
-    this.employeeIdInput = page.locator('input[placeholder="Type here"]').nth(1);
-    this.searchButton = page.getByRole('button', { name: 'Search' });
-    this.resetButton = page.getByRole('button', { name: 'Reset' });
-    this.employeeTable = page.locator('.oxd-table');
-    this.noRecordsFound = page.getByText('No Records Found').first();
+  }
+
+  get addEmployeeButton() {
+    return this.page.getByRole('button', { name: 'Add' });
+  }
+  get employeeNameInput() {
+    return this.page.locator('input[placeholder="Type for hints..."]').first();
+  }
+  get employeeIdInput() {
+    return this.page.locator('input[placeholder="Type here"]').nth(1);
+  }
+  get searchButton() {
+    return this.page.getByRole('button', { name: 'Search' });
+  }
+  get resetButton() {
+    return this.page.getByRole('button', { name: 'Reset' });
+  }
+  get employeeTable() {
+    return this.page.locator('.oxd-table');
+  }
+  get noRecordsFound() {
+    return this.page.getByText('No Records Found').first();
   }
 
   async goto(): Promise<void> {

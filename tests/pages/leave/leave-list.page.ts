@@ -1,16 +1,19 @@
-import { type Page, type Locator } from '@playwright/test';
+import { type Page } from '@playwright/test';
 import { BasePage } from '../base.page';
 
 export class LeaveListPage extends BasePage {
-  readonly tableHeader: Locator;
-  readonly table: Locator;
-  readonly leaveTypeDropdown: Locator;
-
   constructor(page: Page) {
     super(page);
-    this.tableHeader = page.locator('.oxd-table-header');
-    this.table = page.locator('.oxd-table');
-    this.leaveTypeDropdown = page.locator('.oxd-select-wrapper').first();
+  }
+
+  get tableHeader() {
+    return this.page.locator('.oxd-table-header');
+  }
+  get table() {
+    return this.page.locator('.oxd-table');
+  }
+  get leaveTypeDropdown() {
+    return this.page.locator('.oxd-select-wrapper').first();
   }
 
   async goto(): Promise<void> {
