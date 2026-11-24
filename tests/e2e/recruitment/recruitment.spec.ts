@@ -66,7 +66,10 @@ test.describe('Recruitment', () => {
     await expect(page.getByRole('heading', { name: 'Candidates' })).toBeVisible();
   });
 
-  test('should display candidates table headers @regression', async ({ recruitmentModule, page }) => {
+  test('should display candidates table headers @regression', async ({
+    recruitmentModule,
+    page,
+  }) => {
     await recruitmentModule.navigateToCandidates();
     await expect(page.locator('.oxd-table')).toBeVisible();
   });

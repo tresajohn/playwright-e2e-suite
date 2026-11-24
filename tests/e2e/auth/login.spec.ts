@@ -48,10 +48,7 @@ test.describe('Login', () => {
     await expect(loginPage.passwordInput).toHaveAttribute('type', 'password');
   });
 
-  test('should logout successfully and redirect to login @smoke', async ({
-    loginModule,
-    page,
-  }) => {
+  test('should logout successfully and redirect to login @smoke', async ({ loginModule, page }) => {
     await loginModule.login(ADMIN_USER.username, ADMIN_USER.password);
     await expect(page).toHaveURL(/dashboard/);
     await loginModule.logout();

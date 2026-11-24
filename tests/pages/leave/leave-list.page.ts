@@ -15,7 +15,9 @@ export class LeaveListPage extends BasePage {
 
   async goto(): Promise<void> {
     await this.page.goto('/web/index.php/leave/viewLeaveList', { waitUntil: 'domcontentloaded' });
-    await this.page.getByRole('heading', { name: 'Leave List' }).waitFor({ state: 'visible', timeout: 30_000 });
+    await this.page
+      .getByRole('heading', { name: 'Leave List' })
+      .waitFor({ state: 'visible', timeout: 30_000 });
   }
 
   async gotoApplyLeave(): Promise<void> {
@@ -24,7 +26,9 @@ export class LeaveListPage extends BasePage {
   }
 
   async gotoEntitlements(): Promise<void> {
-    await this.page.goto('/web/index.php/leave/viewLeaveEntitlements', { waitUntil: 'domcontentloaded' });
+    await this.page.goto('/web/index.php/leave/viewLeaveEntitlements', {
+      waitUntil: 'domcontentloaded',
+    });
     await this.waitForPageLoad();
   }
 

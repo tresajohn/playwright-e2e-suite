@@ -5,7 +5,7 @@ import { type VacancyData } from '../utils/test-data.factory';
 export class RecruitmentModule {
   constructor(
     private readonly page: Page,
-    private readonly apiContext: APIRequestContext,
+    private readonly apiContext: APIRequestContext
   ) {}
 
   async navigateToVacancies(): Promise<void> {
