@@ -18,35 +18,23 @@ test.describe('Employee Management (PIM)', () => {
     await expect(page.getByRole('heading', { name: 'Employee Information' })).toBeVisible();
   });
 
-  test('should add a new employee @regression', async ({ addEmployeePage, page }) => {
+  test('should add a new employee @regression', async ({ employeeModule, page }) => {
     const employee = createEmployeeData();
-
-    await addEmployeePage.fillEmployeeDetails(
-      employee.firstName,
-      employee.middleName,
-      employee.lastName
-    );
-    await addEmployeePage.saveEmployee();
+    empNumber = await employeeModule.addEmployee(employee);
     await expect(page).toHaveURL(/pim\/(view|add)/);
     await expect(page.locator('.oxd-layout-context')).toBeVisible();
-
-    const urlMatch = page.url().match(/empNumber\/(\d+)/);
-    if (urlMatch) {
-      empNumber = parseInt(urlMatch[1], 10);
-    }
   });
 
-  test('should search employee by name @regression', async ({ employeeListPage }) => {
-    await employeeListPage.searchByName('John');
-    const count = await employeeListPage.getResultCount();
+  test('should search employee by name @regression', async ({ employeeModule }) => {
+    const count = await employeeModule.searchByName('John');
     expect(count).toBeGreaterThanOrEqual(0);
   });
 
   test('should show no records for non-existent employee @regression', async ({
-    employeeListPage,
+    employeeModule,
   }) => {
-    await employeeListPage.searchByName('ZZZNonExistentEmployee999');
-    await expect(employeeListPage.noRecordsFound).toBeVisible();
+    await employeeModule.searchByName('ZZZNonExistentEmployee999');
+    await expect(employeeModule.listPage.noRecordsFound).toBeVisible();
   });
 
   test('should reset search filters @regression', async ({ employeeListPage }) => {
